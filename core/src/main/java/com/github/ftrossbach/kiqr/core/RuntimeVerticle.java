@@ -55,13 +55,20 @@ public class RuntimeVerticle extends AbstractVerticle{
     }
 
     private void registerCodecs() {
-        vertx.eventBus().registerDefaultCodec(InstanceResolverQuery.class, new InstanceResolverQueryCodec());
-        vertx.eventBus().registerDefaultCodec(ScalarKeyValueQuery.class, new KeyValueQueryCodec());
-        vertx.eventBus().registerDefaultCodec(WindowedQuery.class, new WindowedQueryCodec());
-        vertx.eventBus().registerDefaultCodec(ScalarKeyValueQueryResponse.class, new ScalarQueryResponseCodec());
-        vertx.eventBus().registerDefaultCodec(MultiValuedQueryResponse.class, new MultiValuedQueryResponseCodec());
-        vertx.eventBus().registerDefaultCodec(WindowedQueryResponse.class, new WindowedQueryResponseCodec());
-        vertx.eventBus().registerDefaultCodec(InstanceResolverResponse.class, new InstanceResolverResponseCodec());
+        registerCodec(InstanceResolverQuery.class);
+        registerCodec(ScalarKeyValueQuery.class);
+        registerCodec(WindowedQuery.class);
+        registerCodec(ScalarKeyValueQueryResponse.class);
+        registerCodec(MultiValuedKeyValueQueryResponse.class);
+        registerCodec(WindowedQueryResponse.class);
+        registerCodec(InstanceResolverResponse.class);
+        registerCodec(AllKeyValuesQuery.class);
+        registerCodec(RangeKeyValueQuery.class);
+
+    }
+
+    private <T> void registerCodec(Class<T> clazz){
+        vertx.eventBus().registerDefaultCodec(clazz, new KiqrCodec<>(clazz));
     }
 
     @Override

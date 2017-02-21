@@ -5,14 +5,14 @@ import java.util.List;
 /**
  * Created by ftr on 20/02/2017.
  */
-public class MultiValuedQueryResponse extends AbstractQueryResponse{
+public class MultiValuedKeyValueQueryResponse extends AbstractQueryResponse{
 
     private List<byte[]> values;
 
-    public MultiValuedQueryResponse() {
+    public MultiValuedKeyValueQueryResponse() {
     }
 
-    public MultiValuedQueryResponse(QueryStatus status, List<byte[]> values) {
+    public MultiValuedKeyValueQueryResponse(QueryStatus status, List<byte[]> values) {
         super(status);
         this.values = values;
     }
