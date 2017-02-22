@@ -2,6 +2,15 @@ package com.github.ftrossbach.kiqr.core;
 
 import com.github.ftrossbach.kiqr.commons.config.querymodel.codec.*;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
+import com.github.ftrossbach.kiqr.core.query.InstanceResolverVerticle;
+import com.github.ftrossbach.kiqr.core.query.facade.AllKeyValueQueryFacadeVerticle;
+import com.github.ftrossbach.kiqr.core.query.facade.KeyValueQueryFacadeVerticle;
+import com.github.ftrossbach.kiqr.core.query.facade.RangeKeyValueQueryFacadeVerticle;
+import com.github.ftrossbach.kiqr.core.query.facade.WindowedQueryFacadeVerticle;
+import com.github.ftrossbach.kiqr.core.query.kv.AllKeyValuesQueryVerticle;
+import com.github.ftrossbach.kiqr.core.query.kv.KeyValueQueryVerticle;
+import com.github.ftrossbach.kiqr.core.query.kv.RangeKeyValueQueryVerticle;
+import com.github.ftrossbach.kiqr.core.query.windowed.WindowedQueryVerticle;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
@@ -39,6 +48,14 @@ public class RuntimeVerticle extends AbstractVerticle{
 
         vertx.deployVerticle(new InstanceResolverVerticle(streams));
         vertx.deployVerticle(new KeyValueQueryVerticle(instanceId, streams));
+        vertx.deployVerticle(new AllKeyValuesQueryVerticle(instanceId, streams));
+        vertx.deployVerticle(new RangeKeyValueQueryVerticle(instanceId, streams));
+        vertx.deployVerticle(new WindowedQueryVerticle(instanceId, streams));
+
+        vertx.deployVerticle(new AllKeyValueQueryFacadeVerticle());
+        vertx.deployVerticle(new KeyValueQueryFacadeVerticle());
+        vertx.deployVerticle(new RangeKeyValueQueryFacadeVerticle());
+        vertx.deployVerticle(new WindowedQueryFacadeVerticle());
 
         startFuture.complete();
 
@@ -64,6 +81,7 @@ public class RuntimeVerticle extends AbstractVerticle{
         registerCodec(InstanceResolverResponse.class);
         registerCodec(AllKeyValuesQuery.class);
         registerCodec(RangeKeyValueQuery.class);
+        registerCodec(AllInstancesResponse.class);
 
     }
 

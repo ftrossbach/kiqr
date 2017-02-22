@@ -1,9 +1,10 @@
-package com.github.ftrossbach.kiqr.core;
+package com.github.ftrossbach.kiqr.core.query.kv;
 
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.QueryStatus;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQueryResponse;
+import com.github.ftrossbach.kiqr.core.query.AbstractQueryVerticle;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
@@ -19,15 +20,12 @@ public class KeyValueQueryVerticle extends AbstractQueryVerticle {
         super(instanceId, streams);
     }
 
-    @Override
-    protected String getQueryAddressPrefix() {
-        return Config.KEY_VALUE_QUERY_ADDRESS_PREFIX;
-    }
+
 
     @Override
     public void start() throws Exception {
 
-        vertx.eventBus().consumer(getQueryAddressPrefix() + instanceId, msg -> {
+        vertx.eventBus().consumer(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + instanceId, msg -> {
 
             ScalarKeyValueQuery query = (ScalarKeyValueQuery) msg.body();
 

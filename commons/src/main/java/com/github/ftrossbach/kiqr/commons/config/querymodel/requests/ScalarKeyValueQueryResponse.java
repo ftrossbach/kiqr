@@ -1,5 +1,7 @@
 package com.github.ftrossbach.kiqr.commons.config.querymodel.requests;
 
+import java.util.Arrays;
+
 /**
  * Created by ftr on 20/02/2017.
  */
@@ -20,5 +22,13 @@ public class ScalarKeyValueQueryResponse extends AbstractQueryResponse {
 
     public void setValue(byte[] value) {
         this.value = value;
+    }
+
+
+    @Override
+    public String toString() {
+        return "ScalarKeyValueQueryResponse{" +
+                "value=" + Arrays.toString(value) +
+                '}';
     }
 }

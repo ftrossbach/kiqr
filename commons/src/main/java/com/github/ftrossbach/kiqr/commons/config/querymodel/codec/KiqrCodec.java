@@ -32,7 +32,7 @@ public  class KiqrCodec<T> implements MessageCodec<T, T> {
             kryo.register(WindowedQueryResponse.class);
 
             return kryo;
-        };
+        }
     };
 
     public KiqrCodec(Class<T> clazz){

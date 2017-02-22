@@ -22,7 +22,7 @@ public class WindowedQueryResponse extends AbstractQueryResponse{
         this.values = values;
     }
 
-    public SortedMap<Long, byte[]> getValues() {
+    public SortedMap<Long, byte[]> getResults() {
         return values;
     }
 }

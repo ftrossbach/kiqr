@@ -1,27 +1,37 @@
 package com.github.ftrossbach.kiqr.commons.config.querymodel.requests;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by ftr on 20/02/2017.
  */
 public class MultiValuedKeyValueQueryResponse extends AbstractQueryResponse{
 
-    private List<byte[]> values;
+    private Map<byte[],byte[]> results;
 
     public MultiValuedKeyValueQueryResponse() {
     }
 
-    public MultiValuedKeyValueQueryResponse(QueryStatus status, List<byte[]> values) {
+    public MultiValuedKeyValueQueryResponse(QueryStatus status, Map<byte[],byte[]> results) {
         super(status);
-        this.values = values;
+        this.results = results;
     }
 
-    public List<byte[]> getValues() {
-        return values;
+    public Map<byte[],byte[]> getResults() {
+        return results;
     }
 
-    public void setValues(List<byte[]> values) {
-        this.values = values;
+    public void setResults(Map<byte[],byte[]> results) {
+        this.results = results;
+    }
+
+    public MultiValuedKeyValueQueryResponse merge(MultiValuedKeyValueQueryResponse other){
+
+        Map<byte[], byte[]> left = new HashMap<>(this.results);
+        Map<byte[], byte[]> right = new HashMap<>(other.results);
+        left.putAll(right);
+
+        return new MultiValuedKeyValueQueryResponse(QueryStatus.OK, left);
     }
 }

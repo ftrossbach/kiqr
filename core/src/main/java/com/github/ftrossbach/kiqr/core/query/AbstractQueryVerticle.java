@@ -1,4 +1,4 @@
-package com.github.ftrossbach.kiqr.core;
+package com.github.ftrossbach.kiqr.core.query;
 
 import io.vertx.core.AbstractVerticle;
 import org.apache.kafka.common.serialization.Serde;
@@ -16,11 +16,6 @@ public abstract class AbstractQueryVerticle extends AbstractVerticle{
         this.streams = streams;
         this.instanceId = instanceId;
     }
-
-
-
-    protected abstract String getQueryAddressPrefix();
-
 
     protected Serde<Object> getSerde(String serde){
         try {
