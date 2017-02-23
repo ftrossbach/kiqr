@@ -30,8 +30,8 @@ public class AllKeyValueQueryFacadeVerticle extends AbstractVerticle{
 
                     List<Future> results = response.getInstances().stream()
                             .map(instanceId -> {
-                                Future future = Future.future();
-                                vertx.eventBus().send(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + instanceId, query);
+                                Future<Message<Object>> future = Future.future();
+                                vertx.eventBus().send(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + instanceId, query, future.completer());
                                 return future;
                             }).collect(Collectors.toList());
 
@@ -39,10 +39,15 @@ public class AllKeyValueQueryFacadeVerticle extends AbstractVerticle{
 
                     all.setHandler(handler -> {
 
-                        List<Message<MultiValuedKeyValueQueryResponse>> list = handler.result().list();
+                        if(handler.succeeded()) {
+                            List<Message<MultiValuedKeyValueQueryResponse>> list = handler.result().list();
 
-                        MultiValuedKeyValueQueryResponse compoundResult = list.stream().map(message -> message.body()).reduce(new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b));
-                        msg.reply(compoundResult);
+                            MultiValuedKeyValueQueryResponse compoundResult = list.stream().map(message -> message.body()).reduce(new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b));
+                            msg.reply(compoundResult);
+                        } else {
+                            handler.cause().printStackTrace();
+                            msg.fail(-1, reply.cause().getMessage());
+                        }
                     });
 
                 } else {

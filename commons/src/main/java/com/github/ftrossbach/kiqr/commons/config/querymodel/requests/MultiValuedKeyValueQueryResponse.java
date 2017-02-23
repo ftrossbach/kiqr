@@ -8,7 +8,7 @@ import java.util.Map;
  */
 public class MultiValuedKeyValueQueryResponse extends AbstractQueryResponse{
 
-    private Map<byte[],byte[]> results;
+    private Map<byte[],byte[]> results = new HashMap<>();
 
     public MultiValuedKeyValueQueryResponse() {
     }
