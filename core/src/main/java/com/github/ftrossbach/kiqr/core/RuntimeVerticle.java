@@ -11,6 +11,7 @@ import com.github.ftrossbach.kiqr.core.query.kv.AllKeyValuesQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.kv.KeyValueQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.kv.RangeKeyValueQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.windowed.WindowedQueryVerticle;
+import com.github.ftrossbach.kiqr.rest.server.HttpServer;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
@@ -56,6 +57,8 @@ public class RuntimeVerticle extends AbstractVerticle{
         vertx.deployVerticle(new KeyValueQueryFacadeVerticle());
         vertx.deployVerticle(new RangeKeyValueQueryFacadeVerticle());
         vertx.deployVerticle(new WindowedQueryFacadeVerticle());
+
+        vertx.deployVerticle(new HttpServer());
 
         startFuture.complete();
 

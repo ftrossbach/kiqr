@@ -19,6 +19,7 @@
     <modules>
         <module>core</module>
         <module>commons</module>
+        <module>rest-server</module>
 
 
     </modules>
@@ -26,19 +27,29 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>${groupId}</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>kiqr-commons</artifactId>
                 <version>${version}</version>
             </dependency>
             <dependency>
-                <groupId>${groupId}</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>kiqr-core</artifactId>
+                <version>${version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>kiqr-rest-server</artifactId>
                 <version>${version}</version>
             </dependency>
 
             <dependency>
                 <groupId>io.vertx</groupId>
                 <artifactId>vertx-core</artifactId>
+                <version>${vert.x}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-web</artifactId>
                 <version>${vert.x}</version>
             </dependency>
             <dependency>

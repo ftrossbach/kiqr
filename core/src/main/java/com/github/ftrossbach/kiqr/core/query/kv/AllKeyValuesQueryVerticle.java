@@ -3,6 +3,8 @@ package com.github.ftrossbach.kiqr.core.query.kv;
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
 import com.github.ftrossbach.kiqr.core.query.AbstractQueryVerticle;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.spi.BufferFactory;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
@@ -37,10 +39,11 @@ public class AllKeyValuesQueryVerticle extends AbstractQueryVerticle {
             ReadOnlyKeyValueStore<Object, Object> kvStore = streams.store(query.getStoreName(), QueryableStoreTypes.keyValueStore());
             KeyValueIterator<Object, Object> result = kvStore.all();
             if (result.hasNext()) {
-                Map<byte[], byte[]> results = new HashMap<>();
+                Map<Buffer, Buffer> results = new HashMap<>();
                 while(result.hasNext()){
                     KeyValue<Object, Object> kvEntry = result.next();
-                    results.put(serializeObject(keySerde, kvEntry.key), serializeObject(valueSerde, kvEntry.value));
+
+                    results.put(Buffer.buffer(serializeObject(keySerde, kvEntry.key)), Buffer.buffer(serializeObject(valueSerde, kvEntry.value)));
                 }
                 msg.reply(new MultiValuedKeyValueQueryResponse(QueryStatus.OK, results));
             } else {

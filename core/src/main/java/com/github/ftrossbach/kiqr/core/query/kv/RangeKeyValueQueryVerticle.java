@@ -5,6 +5,7 @@ import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.MultiValued
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.QueryStatus;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.RangeKeyValueQuery;
 import com.github.ftrossbach.kiqr.core.query.AbstractQueryVerticle;
+import io.vertx.core.buffer.Buffer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
@@ -41,10 +42,10 @@ public class RangeKeyValueQueryVerticle extends AbstractQueryVerticle {
             ReadOnlyKeyValueStore<Object, Object> kvStore = streams.store(query.getStoreName(), QueryableStoreTypes.keyValueStore());
             KeyValueIterator<Object, Object> result = kvStore.range(deserializeObject(keySerde, query.getFrom()), deserializeObject(keySerde, query.getTo()));
             if (result.hasNext()) {
-                Map<byte[], byte[]> results = new HashMap<>();
+                Map<Buffer, Buffer> results = new HashMap<>();
                 while(result.hasNext()){
                     KeyValue<Object, Object> kvEntry = result.next();
-                    results.put(serializeObject(keySerde, kvEntry.key), serializeObject(valueSerde, kvEntry.value));
+                    results.put(Buffer.buffer(serializeObject(keySerde, kvEntry.key)), Buffer.buffer(serializeObject(valueSerde, kvEntry.value)));
                 }
                 msg.reply(new MultiValuedKeyValueQueryResponse(QueryStatus.OK, results));
             } else {

@@ -3,6 +3,7 @@ package com.github.ftrossbach.kiqr.core.query.windowed;
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
 import com.github.ftrossbach.kiqr.core.query.AbstractQueryVerticle;
+import io.vertx.core.buffer.Buffer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
@@ -35,10 +36,10 @@ public class WindowedQueryVerticle extends AbstractQueryVerticle {
             ReadOnlyWindowStore<Object, Object> windowStore = streams.store(query.getStoreName(), QueryableStoreTypes.windowStore());
             WindowStoreIterator<Object> result = windowStore.fetch(deserializeObject(keySerde, query.getKey()), query.getFrom(), query.getTo());
             if (result.hasNext()) {
-                SortedMap<Long, byte[]> results = new TreeMap<>();
+                SortedMap<Long, Buffer> results = new TreeMap<>();
                 while (result.hasNext()) {
                     KeyValue<Long, Object> windowedEntry = result.next();
-                    results.put(windowedEntry.key, serializeObject(valueSerde, windowedEntry.value));
+                    results.put(windowedEntry.key, Buffer.buffer(serializeObject(valueSerde, windowedEntry.value)));
                 }
                 msg.reply(new WindowedQueryResponse(QueryStatus.OK, results));
             } else {
