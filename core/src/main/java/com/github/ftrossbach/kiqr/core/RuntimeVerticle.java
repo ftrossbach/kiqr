@@ -18,6 +18,8 @@ import io.vertx.core.Future;
 import io.vertx.core.json.Json;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.kafka.common.serialization.Serde;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
@@ -30,14 +32,79 @@ import java.util.UUID;
  */
 public class RuntimeVerticle extends AbstractVerticle{
 
-    final Logger logger = LoggerFactory.getLogger(getClass());
 
+    public static class Builder{
+
+        private final KStreamBuilder builder;
+        private final Properties properties;
+
+        public Builder(KStreamBuilder builder) {
+            this.builder = builder;
+            properties = new Properties();
+        }
+
+        public Builder(KStreamBuilder builder, Properties properties) {
+            this.builder = builder;
+            this.properties = properties;
+        }
+
+        public Builder withApplicationId(String applicationId){
+            properties.put(StreamsConfig.APPLICATION_ID_CONFIG, applicationId);
+            return this;
+        }
+        public Builder withBootstrapServers(String servers){
+            properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, servers);
+            return this;
+        }
+        public Builder withBuffering(Integer buffer){
+            properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, buffer.toString());
+            return this
+        }
+
+        public Builder withoutBuffering(){
+            properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, "0");
+            return this;
+        }
+
+        public Builder withKeySerde(Serde<?> serde) {
+            properties.put(StreamsConfig.KEY_SERDE_CLASS_CONFIG, serde.getClass().getName());
+            return this;
+        }
+
+        public Builder withKeySerde(Class<? extends Serde<?>> serdeClass) {
+            properties.put(StreamsConfig.KEY_SERDE_CLASS_CONFIG, serdeClass.getName());
+            return this;
+        }
+
+        public Builder withValueSerde(Serde<?> serde) {
+            properties.put(StreamsConfig.VALUE_SERDE_CLASS_CONFIG, serde.getClass().getName());
+            return this;
+        }
+
+        public Builder withValueSerde(Class<? extends Serde<?>> serdeClass) {
+            properties.put(StreamsConfig.VALUE_SERDE_CLASS_CONFIG, serdeClass.getName());
+            return this;
+        }
+
+
+        public RuntimeVerticle build(){
+
+            return new RuntimeVerticle(builder, properties);
+        }
+
+
+
+    }
+
+
+
+    final Logger logger = LoggerFactory.getLogger(getClass());
     private  KafkaStreams streams;
     private KStreamBuilder builder;
     private Properties props;
 
 
-    public RuntimeVerticle(KStreamBuilder builder, Properties props) {
+    private RuntimeVerticle(KStreamBuilder builder, Properties props) {
         this.builder = builder;
         this.props = props;
     }

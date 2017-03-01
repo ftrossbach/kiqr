@@ -31,52 +31,8 @@ public class MainVerticle extends AbstractVerticle {
         KTable<Windowed<String>, Long> windowedCount = table.toStream().groupByKey().count(TimeWindows.of(60), "visitCount");
 
 
-        ScalarKeyValueQuery kvQuery = new ScalarKeyValueQuery("visitStore", "org.apache.kafka.common.serialization.Serdes$StringSerde", Serdes.String().serializer().serialize("?", "127.0.0.1"), "org.apache.kafka.common.serialization.Serdes$LongSerde" );
-         WindowedQuery windowQuery = new WindowedQuery("visitCount", "org.apache.kafka.common.serialization.Serdes$StringSerde",Serdes.String().serializer().serialize("", "127.0.0.1"),"org.apache.kafka.common.serialization.Serdes$LongSerde", System.currentTimeMillis() - 1000 * 60 * 60, System.currentTimeMillis());
-        RangeKeyValueQuery rangeQuery = new RangeKeyValueQuery("visitStore", "org.apache.kafka.common.serialization.Serdes$StringSerde", "org.apache.kafka.common.serialization.Serdes$LongSerde",Serdes.String().serializer().serialize("?", "127.0.0.1"), Serdes.String().serializer().serialize("?", "127.0.0.3") );
-        AllKeyValuesQuery allKvQuery = new AllKeyValuesQuery("visitStore", "org.apache.kafka.common.serialization.Serdes$StringSerde", "org.apache.kafka.common.serialization.Serdes$LongSerde");
 
-        vertx.setPeriodic(10000, id -> {
-
-            /*vertx.eventBus().send(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, kvQuery, rep -> {
-
-                if(rep.succeeded()){
-                    System.out.println(rep.result().body());
-                } else {
-                    rep.cause().printStackTrace();
-                }
-            });*/
-
-            /*vertx.eventBus().send(Config.WINDOWED_QUERY_FACADE_ADDRESS, windowQuery, rep -> {
-
-                if(rep.succeeded()){
-                    System.out.println(rep.result().body());
-                } else {
-                    rep.cause().printStackTrace();
-                }
-            });*/
-
-            /*vertx.eventBus().send(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, rangeQuery, rep -> {
-
-                if(rep.succeeded()){
-                    System.out.println(rep.result().body());
-                } else {
-                    rep.cause().printStackTrace();
-                }
-            });*/
-            vertx.eventBus().send(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, allKvQuery, rep -> {
-
-                if(rep.succeeded()){
-                    System.out.println(rep.result().body());
-                } else {
-                    rep.cause().printStackTrace();
-                }
-            });
-
-
-        });
-
-        vertx.deployVerticle(new RuntimeVerticle(builder, props), res -> {
+        vertx.deployVerticle(new RuntimeVerticle.Builder(builder, props).build(), res -> {
             if (res.succeeded()) {
                 startFuture.complete();
             } else {
