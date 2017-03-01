@@ -1,7 +1,10 @@
 package com.github.ftrossbach.kiqr.commons.config.querymodel.requests;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.github.ftrossbach.kiqr.commons.config.rest.serde.BufferKeyDeserializer;
 import com.github.ftrossbach.kiqr.commons.config.rest.serde.BufferKeySerializer;
+import com.github.ftrossbach.kiqr.commons.config.rest.serde.BufferValueDeserializer;
 import com.github.ftrossbach.kiqr.commons.config.rest.serde.BufferValueSerializer;
 import io.vertx.core.buffer.Buffer;
 
@@ -14,6 +17,7 @@ import java.util.Map;
 public class MultiValuedKeyValueQueryResponse extends AbstractQueryResponse{
 
     @JsonSerialize(keyUsing = BufferKeySerializer.class, contentUsing = BufferValueSerializer.class)
+    @JsonDeserialize(keyUsing = BufferKeyDeserializer.class, contentUsing = BufferValueDeserializer.class)
     private Map<Buffer,Buffer> results = new HashMap<>();
 
     public MultiValuedKeyValueQueryResponse() {

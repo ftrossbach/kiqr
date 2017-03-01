@@ -20,6 +20,8 @@
         <module>core</module>
         <module>commons</module>
         <module>rest-server</module>
+        <module>commons-client</module>
+        <module>rest-client</module>
 
 
     </modules>
@@ -41,7 +43,16 @@
                 <artifactId>kiqr-rest-server</artifactId>
                 <version>${version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>kiqr-rest-client</artifactId>
+                <version>${version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>kiqr-commons-client</artifactId>
+                <version>${version}</version>
+            </dependency>
             <dependency>
                 <groupId>io.vertx</groupId>
                 <artifactId>vertx-core</artifactId>
@@ -78,6 +89,11 @@
                 <artifactId>vertx-unit</artifactId>
                 <version>${vert.x}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jdk8</artifactId>
+                <version>2.7.4</version>
             </dependency>
         </dependencies>
 

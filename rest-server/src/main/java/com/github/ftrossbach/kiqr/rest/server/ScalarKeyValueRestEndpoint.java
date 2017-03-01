@@ -33,6 +33,7 @@ public class ScalarKeyValueRestEndpoint extends AbstractVerticle {
             String keySerde = request.getParam("keySerde");
             String valueSerde = request.getParam("valueSerde");
             String store = request.getParam("store");
+            System.out.println(request.absoluteURI());
             byte[] key = Base64.getDecoder().decode(request.getParam("key"));
 
             if(keySerde == null || valueSerde == null){

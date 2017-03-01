@@ -1,5 +1,6 @@
 package com.github.ftrossbach.kiqr.core;
 
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.codec.*;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
 import com.github.ftrossbach.kiqr.core.query.InstanceResolverVerticle;
@@ -14,6 +15,7 @@ import com.github.ftrossbach.kiqr.core.query.windowed.WindowedQueryVerticle;
 import com.github.ftrossbach.kiqr.rest.server.HttpServer;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.json.Json;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.kafka.streams.KafkaStreams;
@@ -59,6 +61,8 @@ public class RuntimeVerticle extends AbstractVerticle{
         vertx.deployVerticle(new WindowedQueryFacadeVerticle());
 
         vertx.deployVerticle(new HttpServer());
+
+        Json.mapper.registerModule(new Jdk8Module());
 
         startFuture.complete();
 

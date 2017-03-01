@@ -1,39 +1,18 @@
 package com.github.ftrossbach.kiqr.commons.config.querymodel.codec;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.ByteBufferInput;
-import com.esotericsoftware.kryo.io.ByteBufferOutput;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.MessageCodec;
-
-import java.awt.*;
-import java.io.ByteArrayOutputStream;
+import io.vertx.core.eventbus.impl.codecs.StringMessageCodec;
+import io.vertx.core.json.Json;
 
 /**
  * Created by ftr on 20/02/2017.
  */
-public  class KiqrCodec<T> implements MessageCodec<T, T> {
+public class KiqrCodec<T> implements MessageCodec<T, T> {
+
+    private final StringMessageCodec codec = new StringMessageCodec();
 
     private final Class<T> clazz;
-
-    private static final ThreadLocal<Kryo> kryos = new ThreadLocal<Kryo>() {
-        protected Kryo initialValue() {
-            Kryo kryo = new Kryo();
-            // configure kryo instance, customize settings
-            kryo.register(AllKeyValuesQuery.class);
-            kryo.register(InstanceResolverQuery.class);
-            kryo.register(InstanceResolverResponse.class);
-            kryo.register(MultiValuedKeyValueQueryResponse.class);
-            kryo.register(RangeKeyValueQuery.class);
-            kryo.register(ScalarKeyValueQuery.class);
-            kryo.register(ScalarKeyValueQueryResponse.class);
-            kryo.register(WindowedQuery.class);
-            kryo.register(WindowedQueryResponse.class);
-
-            return kryo;
-        }
-    };
 
     public KiqrCodec(Class<T> clazz){
         this.clazz = clazz;
@@ -42,17 +21,16 @@ public  class KiqrCodec<T> implements MessageCodec<T, T> {
 
     @Override
     public void encodeToWire(Buffer buffer, T object) {
+        //ToDo: more efficient serialization than JSON for internal purposes
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(100);
-        kryos.get().writeObject(new ByteBufferOutput(outputStream), object);
-        buffer.appendBytes(outputStream.toByteArray());
+        codec.encodeToWire(buffer, Json.encode(object));
     }
 
     @Override
     public T decodeFromWire(int pos, Buffer buffer) {
+        //ToDo: more efficient deserialization
 
-        byte[] bytes = buffer.getBytes(pos, buffer.length());
-        return kryos.get().readObject(new ByteBufferInput(bytes), clazz);
+       return Json.decodeValue(codec.decodeFromWire(pos, buffer), clazz);
     }
 
 
