@@ -22,7 +22,7 @@ public class RangeKeyValueQueryFacadeVerticle extends AbstractVerticle{
         vertx.eventBus().consumer(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, msg -> {
             RangeKeyValueQuery query = (RangeKeyValueQuery) msg.body();
 
-            vertx.eventBus().send(Config.ALL_INSTANCES, null, reply -> {
+            vertx.eventBus().send(Config.ALL_INSTANCES, query.getStoreName(), reply -> {
                 if(reply.succeeded()){
 
                     AllInstancesResponse response = (AllInstancesResponse) reply.result().body();

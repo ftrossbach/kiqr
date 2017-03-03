@@ -53,7 +53,8 @@ public class InstanceResolverVerticle extends AbstractVerticle {
 
         vertx.eventBus().consumer(Config.ALL_INSTANCES, msg -> {
 
-            Set<String> instances = streams.allMetadata().stream().map(metadata -> metadata.host()).collect(Collectors.toSet());
+            String store = (String) msg.body();
+            Set<String> instances = streams.allMetadataForStore(store).stream().map(metadata -> metadata.host()).collect(Collectors.toSet());
 
             msg.reply(new AllInstancesResponse(instances));
 

@@ -42,10 +42,10 @@ public class RangeKeyValueQueryVerticle extends AbstractQueryVerticle {
             ReadOnlyKeyValueStore<Object, Object> kvStore = streams.store(query.getStoreName(), QueryableStoreTypes.keyValueStore());
             KeyValueIterator<Object, Object> result = kvStore.range(deserializeObject(keySerde, query.getFrom()), deserializeObject(keySerde, query.getTo()));
             if (result.hasNext()) {
-                Map<Buffer, Buffer> results = new HashMap<>();
+                Map<String, String> results = new HashMap<>();
                 while(result.hasNext()){
                     KeyValue<Object, Object> kvEntry = result.next();
-                    results.put(Buffer.buffer(serializeObject(keySerde, kvEntry.key)), Buffer.buffer(serializeObject(valueSerde, kvEntry.value)));
+                    results.put(base64Encode(keySerde, kvEntry.key),base64Encode(valueSerde, kvEntry.value));
                 }
                 msg.reply(new MultiValuedKeyValueQueryResponse(QueryStatus.OK, results));
             } else {

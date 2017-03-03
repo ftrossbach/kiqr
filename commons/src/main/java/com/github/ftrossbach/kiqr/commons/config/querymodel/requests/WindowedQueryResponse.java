@@ -2,9 +2,7 @@ package com.github.ftrossbach.kiqr.commons.config.querymodel.requests;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.github.ftrossbach.kiqr.commons.config.rest.serde.BufferValueDeserializer;
-import com.github.ftrossbach.kiqr.commons.config.rest.serde.BufferValueSerializer;
-import io.vertx.core.buffer.Buffer;
+
 
 import java.util.SortedMap;
 
@@ -13,25 +11,24 @@ import java.util.SortedMap;
  */
 public class WindowedQueryResponse extends AbstractQueryResponse{
 
-    @JsonSerialize(contentUsing = BufferValueSerializer.class)
-    @JsonDeserialize(contentUsing = BufferValueDeserializer.class)
 
-    private SortedMap<Long, Buffer> values;
+
+    private SortedMap<Long, String> values;
 
     public WindowedQueryResponse() {
 
     }
 
-    public WindowedQueryResponse(QueryStatus status, SortedMap<Long, Buffer> values) {
+    public WindowedQueryResponse(QueryStatus status, SortedMap<Long, String> values) {
         super(status);
         this.values = values;
     }
 
-    public void setValues(SortedMap<Long, Buffer> values) {
+    public void setValues(SortedMap<Long, String> values) {
         this.values = values;
     }
 
-    public SortedMap<Long, Buffer> getValues() {
+    public SortedMap<Long, String> getValues() {
         return values;
     }
 }

@@ -6,9 +6,7 @@ import org.apache.kafka.common.serialization.Serdes;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Created by ftr on 01/03/2017.

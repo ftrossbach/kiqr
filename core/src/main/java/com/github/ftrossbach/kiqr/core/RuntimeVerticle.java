@@ -1,9 +1,9 @@
 package com.github.ftrossbach.kiqr.core;
 
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.codec.*;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
 import com.github.ftrossbach.kiqr.core.query.InstanceResolverVerticle;
+import com.github.ftrossbach.kiqr.core.query.KiqrCodec;
 import com.github.ftrossbach.kiqr.core.query.facade.AllKeyValueQueryFacadeVerticle;
 import com.github.ftrossbach.kiqr.core.query.facade.KeyValueQueryFacadeVerticle;
 import com.github.ftrossbach.kiqr.core.query.facade.RangeKeyValueQueryFacadeVerticle;
@@ -15,15 +15,15 @@ import com.github.ftrossbach.kiqr.core.query.windowed.WindowedQueryVerticle;
 import com.github.ftrossbach.kiqr.rest.server.HttpServer;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.Json;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+
 import org.apache.kafka.common.serialization.Serde;
-import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
 
+import java.util.Optional;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -32,11 +32,11 @@ import java.util.UUID;
  */
 public class RuntimeVerticle extends AbstractVerticle{
 
-
     public static class Builder{
 
         private final KStreamBuilder builder;
         private final Properties properties;
+        private Optional<HttpServerOptions> httpServerOptions;
 
         public Builder(KStreamBuilder builder) {
             this.builder = builder;
@@ -58,7 +58,7 @@ public class RuntimeVerticle extends AbstractVerticle{
         }
         public Builder withBuffering(Integer buffer){
             properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, buffer.toString());
-            return this
+            return this;
         }
 
         public Builder withoutBuffering(){
@@ -86,28 +86,43 @@ public class RuntimeVerticle extends AbstractVerticle{
             return this;
         }
 
+        public Builder withHttpServer(HttpServerOptions options){
+            this.httpServerOptions = Optional.ofNullable(options);
+            return this;
+        }
+
+        public Builder withHttpServer(int port){
+            this.httpServerOptions = Optional.ofNullable(new HttpServerOptions().setPort(port));
+            return this;
+        }
+
 
         public RuntimeVerticle build(){
 
-            return new RuntimeVerticle(builder, properties);
+            return httpServerOptions
+                    .map(options -> new RuntimeVerticle(builder, properties, options))
+                    .orElseGet(() -> new RuntimeVerticle(builder, properties));
         }
 
 
 
     }
 
-
-
-    final Logger logger = LoggerFactory.getLogger(getClass());
-    private  KafkaStreams streams;
-    private KStreamBuilder builder;
-    private Properties props;
-
+    private KafkaStreams streams;
+    private final KStreamBuilder builder;
+    private final Properties props;
+    private final Optional<HttpServerOptions> serverOptions;
 
     private RuntimeVerticle(KStreamBuilder builder, Properties props) {
+       this(builder, props, null);
+    }
+
+    private RuntimeVerticle(KStreamBuilder builder, Properties props,HttpServerOptions serverOptions){
         this.builder = builder;
         this.props = props;
+        this.serverOptions = Optional.ofNullable(serverOptions);
     }
+
 
 
     @Override
@@ -127,11 +142,19 @@ public class RuntimeVerticle extends AbstractVerticle{
         vertx.deployVerticle(new RangeKeyValueQueryFacadeVerticle());
         vertx.deployVerticle(new WindowedQueryFacadeVerticle());
 
-        vertx.deployVerticle(new HttpServer());
-
         Json.mapper.registerModule(new Jdk8Module());
 
-        startFuture.complete();
+        if(serverOptions.isPresent()){
+            vertx.deployVerticle(new HttpServer(serverOptions.get()), handler -> {
+                if(handler.succeeded()){
+                    startFuture.complete();
+                } else {
+                    startFuture.fail(handler.cause());
+                }
+            });
+        } else {
+            startFuture.complete();
+        }
 
     }
 

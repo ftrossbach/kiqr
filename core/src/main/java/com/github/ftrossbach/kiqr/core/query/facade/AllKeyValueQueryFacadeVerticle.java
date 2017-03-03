@@ -23,7 +23,7 @@ public class AllKeyValueQueryFacadeVerticle extends AbstractVerticle{
         vertx.eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, msg -> {
             AllKeyValuesQuery query = (AllKeyValuesQuery) msg.body();
 
-            vertx.eventBus().send(Config.ALL_INSTANCES, null, reply -> {
+            vertx.eventBus().send(Config.ALL_INSTANCES, query.getStoreName(), reply -> {
                 if(reply.succeeded()){
 
                     AllInstancesResponse response = (AllInstancesResponse) reply.result().body();

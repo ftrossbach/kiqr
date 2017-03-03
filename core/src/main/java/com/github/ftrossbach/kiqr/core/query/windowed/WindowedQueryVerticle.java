@@ -36,10 +36,10 @@ public class WindowedQueryVerticle extends AbstractQueryVerticle {
             ReadOnlyWindowStore<Object, Object> windowStore = streams.store(query.getStoreName(), QueryableStoreTypes.windowStore());
             WindowStoreIterator<Object> result = windowStore.fetch(deserializeObject(keySerde, query.getKey()), query.getFrom(), query.getTo());
             if (result.hasNext()) {
-                SortedMap<Long, Buffer> results = new TreeMap<>();
+                SortedMap<Long, String> results = new TreeMap<>();
                 while (result.hasNext()) {
                     KeyValue<Long, Object> windowedEntry = result.next();
-                    results.put(windowedEntry.key, Buffer.buffer(serializeObject(valueSerde, windowedEntry.value)));
+                    results.put(windowedEntry.key, base64Encode(valueSerde, windowedEntry.value));
                 }
                 msg.reply(new WindowedQueryResponse(QueryStatus.OK, results));
             } else {

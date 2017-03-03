@@ -4,6 +4,8 @@ import io.vertx.core.AbstractVerticle;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
 
+import java.util.Base64;
+
 /**
  * Created by ftr on 19/02/2017.
  */
@@ -33,6 +35,12 @@ public abstract class AbstractQueryVerticle extends AbstractVerticle{
     protected byte[] serializeObject(Serde<Object> serde, Object obj) {
         return serde.serializer().serialize("?", obj);
     }
+
+    protected String base64Encode(Serde<Object> serde, Object obj){
+        return Base64.getEncoder().encodeToString(serializeObject(serde, obj));
+    }
+
+
 
 
 

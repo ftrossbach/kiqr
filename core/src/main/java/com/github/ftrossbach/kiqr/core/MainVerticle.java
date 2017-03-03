@@ -32,7 +32,7 @@ public class MainVerticle extends AbstractVerticle {
 
 
 
-        vertx.deployVerticle(new RuntimeVerticle.Builder(builder, props).build(), res -> {
+        vertx.deployVerticle(new RuntimeVerticle.Builder(builder, props).withHttpServer(2901).build(), res -> {
             if (res.succeeded()) {
                 startFuture.complete();
             } else {

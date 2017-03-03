@@ -12,7 +12,7 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <vert.x>3.3.3</vert.x>
+        <vert.x>3.4.0.Beta1</vert.x>
     </properties>
 
 
@@ -20,7 +20,6 @@
         <module>core</module>
         <module>commons</module>
         <module>rest-server</module>
-        <module>commons-client</module>
         <module>rest-client</module>
 
 
@@ -49,11 +48,6 @@
                 <version>${version}</version>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>kiqr-commons-client</artifactId>
-                <version>${version}</version>
-            </dependency>
-            <dependency>
                 <groupId>io.vertx</groupId>
                 <artifactId>vertx-core</artifactId>
                 <version>${vert.x}</version>
@@ -69,9 +63,20 @@
                 <version>${vert.x}</version>
             </dependency>
             <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-unit</artifactId>
+                <scope>test</scope>
+                <version>${vert.x}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-codegen</artifactId>
+                <version>${vert.x}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.kafka</groupId>
                 <artifactId>kafka-streams</artifactId>
-                <version>0.10.1.1</version>
+                <version>0.10.2.0</version>
             </dependency>
             <dependency>
                 <groupId>com.esotericsoftware</groupId>

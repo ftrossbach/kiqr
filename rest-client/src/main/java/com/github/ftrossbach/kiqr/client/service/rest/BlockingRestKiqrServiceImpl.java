@@ -53,7 +53,7 @@ public class BlockingRestKiqrServiceImpl implements BlockingKiqrService {
                 ScalarKeyValueQueryResponse resp = mapper.readValue(returnJson, ScalarKeyValueQueryResponse.class);
 
                 if (resp.getStatus() == QueryStatus.OK) {
-                    return Optional.of(valueSerde.deserializer().deserialize("", resp.getValue()));
+                    return Optional.of(deserialize(valueClass, valueSerde, resp.getValue()));
                 } else {
                     return Optional.empty();
                 }
@@ -94,8 +94,8 @@ public class BlockingRestKiqrServiceImpl implements BlockingKiqrService {
 
                     return resp.getResults().entrySet().stream()
                             .map(entry -> {
-                                return new Pair<K, V>(keySerde.deserializer().deserialize("", entry.getKey().getBytes()),
-                                        valueSerde.deserializer().deserialize("", entry.getValue().getBytes()));
+                                return new Pair<K, V>(deserialize(keyClass, keySerde,entry.getKey()),
+                                        deserialize(valueClass, valueSerde, entry.getValue()));
                             }).collect(Collectors.toMap(Pair::getKey, pair -> pair.getValue()));
 
 
@@ -140,8 +140,8 @@ public class BlockingRestKiqrServiceImpl implements BlockingKiqrService {
 
                     return resp.getResults().entrySet().stream()
                             .map(entry -> {
-                                return new Pair<K, V>(keySerde.deserializer().deserialize("", entry.getKey().getBytes()),
-                                        valueSerde.deserializer().deserialize("", entry.getValue().getBytes()));
+                                return new Pair<K, V>(deserialize(keyClass, keySerde,entry.getKey()),
+                                        deserialize(valueClass, valueSerde, entry.getValue()));
                             }).collect(Collectors.toMap(Pair::getKey, pair -> pair.getValue()));
 
 
@@ -186,7 +186,7 @@ public class BlockingRestKiqrServiceImpl implements BlockingKiqrService {
                     return new TreeMap<Long, V>(resp.getValues().entrySet().stream()
                             .map(entry -> {
                                 return new Pair<Long, V>(entry.getKey(),
-                                        valueSerde.deserializer().deserialize("", entry.getValue().getBytes()));
+                                        deserialize(valueClass, valueSerde, entry.getValue()));
                             }).collect(Collectors.toMap(Pair::getKey, pair -> pair.getValue())));
 
 
@@ -214,6 +214,11 @@ public class BlockingRestKiqrServiceImpl implements BlockingKiqrService {
         return new URIBuilder().setScheme("http").setHost(host).setPort(port);
     }
 
+
+    private <T> T deserialize(Class<T> clazz, Serde<T> serde, String b64Representation){
+        byte[] bytes = Base64.getDecoder().decode(b64Representation);
+        return serde.deserializer().deserialize("", bytes);
+    }
 
     private static final class Pair<K, V> {
         private final K key;

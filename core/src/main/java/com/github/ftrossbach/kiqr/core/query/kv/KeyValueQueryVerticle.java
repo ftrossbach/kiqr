@@ -36,7 +36,7 @@ public class KeyValueQueryVerticle extends AbstractQueryVerticle {
             ReadOnlyKeyValueStore<Object, Object> kvStore = streams.store(query.getStoreName(), QueryableStoreTypes.keyValueStore());
             Object result = kvStore.get(deserializedKey);
             if (result != null) {
-                msg.reply(new ScalarKeyValueQueryResponse(QueryStatus.OK, serializeObject(valueSerde, result)));
+                msg.reply(new ScalarKeyValueQueryResponse(QueryStatus.OK, base64Encode(valueSerde, result)));
             } else {
                 msg.reply(new ScalarKeyValueQueryResponse(QueryStatus.NOT_FOUND, null));
             }

@@ -7,20 +7,20 @@ import java.util.Arrays;
  */
 public class ScalarKeyValueQueryResponse extends AbstractQueryResponse {
 
-    private byte[] value;
+    private String value;
 
     public ScalarKeyValueQueryResponse(){}
 
-    public ScalarKeyValueQueryResponse(QueryStatus status, byte[] value) {
+    public ScalarKeyValueQueryResponse(QueryStatus status, String value) {
         super(status);
         this.value = value;
     }
 
-    public byte[] getValue() {
+    public String getValue() {
         return value;
     }
 
-    public void setValue(byte[] value) {
+    public void setValue(String value) {
         this.value = value;
     }
 
@@ -28,7 +28,7 @@ public class ScalarKeyValueQueryResponse extends AbstractQueryResponse {
     @Override
     public String toString() {
         return "ScalarKeyValueQueryResponse{" +
-                "value=" + Arrays.toString(value) +
+                "value=" + value +
                 '}';
     }
 }
