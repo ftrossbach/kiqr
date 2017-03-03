@@ -20,6 +20,7 @@ import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.AllInstance
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.InstanceResolverQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.InstanceResolverResponse;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.QueryStatus;
+import com.github.ftrossbach.kiqr.core.query.exceptions.SerdeNotFoundException;
 import io.vertx.core.AbstractVerticle;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
@@ -45,13 +46,17 @@ public class InstanceResolverVerticle extends AbstractVerticle {
     public void start() throws Exception {
 
         vertx.eventBus().consumer(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, msg -> {
+
+
+
+
             InstanceResolverQuery config = (InstanceResolverQuery) msg.body();
 
             Serde<Object> serde = null;
             try {
                serde = (Serde<Object>) Class.forName(config.getKeySerde()).newInstance();
             } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-                throw new RuntimeException(e);
+                throw new SerdeNotFoundException(e);
             }
 
             Object deserializedKey = serde.deserializer().deserialize("?", config.getKey());
@@ -70,10 +75,17 @@ public class InstanceResolverVerticle extends AbstractVerticle {
 
         vertx.eventBus().consumer(Config.ALL_INSTANCES, msg -> {
 
-            String store = (String) msg.body();
-            Set<String> instances = streams.allMetadataForStore(store).stream().map(metadata -> metadata.host()).collect(Collectors.toSet());
 
-            msg.reply(new AllInstancesResponse(instances));
+            try {
+                String store = (String) msg.body();
+                Set<String> instances = streams.allMetadataForStore(store).stream().map(metadata -> metadata.host()).collect(Collectors.toSet());
+
+                msg.reply(new AllInstancesResponse(instances));
+            } catch(RuntimeException e){
+                msg.fail(500, e.getMessage());
+            }
+
+
 
 
         });

@@ -23,6 +23,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.eventbus.ReplyException;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
@@ -36,7 +37,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 
 import static org.junit.Assert.fail;
@@ -81,7 +84,7 @@ public class InstanceResolverVerticleTest {
     }
 
     @Test
-    public void allWithSuccess(TestContext context){
+    public void allWithSingleSuccess(TestContext context){
 
         KafkaStreams streamMock = mock(KafkaStreams.class);
         when(streamMock.allMetadataForStore("store")).thenReturn(Collections.singletonList(new StreamsMetadata(new HostInfo("host", 29), Collections.emptySet(), Collections.emptySet())));
@@ -96,6 +99,74 @@ public class InstanceResolverVerticleTest {
             context.assertEquals(1, response.getInstances().size());
             context.assertEquals("host", response.getInstances().iterator().next());
 
+
+        }));
+
+
+    }
+
+    @Test
+    public void allWithMultipleSuccess(TestContext context){
+
+        KafkaStreams streamMock = mock(KafkaStreams.class);
+        List<StreamsMetadata> metadata = new ArrayList<>();
+        metadata.add(new StreamsMetadata(new HostInfo("host1", 29),Collections.emptySet(), Collections.emptySet()));
+        metadata.add(new StreamsMetadata(new HostInfo("host2", 29),Collections.emptySet(), Collections.emptySet()));
+
+        when(streamMock.allMetadataForStore("store")).thenReturn(metadata);
+
+        InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
+        rule.vertx().deployVerticle(vut);
+        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
+        rule.vertx().eventBus().send(Config.ALL_INSTANCES, "store", context.asyncAssertSuccess( handler -> {
+            AllInstancesResponse response = (AllInstancesResponse) handler.body();
+
+            context.assertEquals(2, response.getInstances().size());
+            context.assertTrue(response.getInstances().contains("host1"));
+            context.assertTrue(response.getInstances().contains("host2"));
+
+        }));
+    }
+
+    @Test
+    public void emptyReturnForMetadata(TestContext context){
+
+        KafkaStreams streamMock = mock(KafkaStreams.class);
+
+        when(streamMock.allMetadataForStore("store")).thenReturn(Collections.emptyList());
+
+        InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
+        rule.vertx().deployVerticle(vut);
+        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
+        rule.vertx().eventBus().send(Config.ALL_INSTANCES, "store", context.asyncAssertSuccess( handler -> {
+            AllInstancesResponse response = (AllInstancesResponse) handler.body();
+
+
+            context.assertTrue(response.getInstances().isEmpty());
+
+        }));
+
+
+    }
+
+    @Test
+    public void unexpectedRuntimeException(TestContext context){
+
+        KafkaStreams streamMock = mock(KafkaStreams.class);
+
+        when(streamMock.allMetadataForStore("store")).thenThrow(IllegalArgumentException.class);
+
+        InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
+        rule.vertx().deployVerticle(vut);
+        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
+        rule.vertx().eventBus().send(Config.ALL_INSTANCES, "store", context.asyncAssertFailure( handler -> {
+
+           context.assertTrue(handler instanceof ReplyException);
+           ReplyException ex = (ReplyException) handler;
+           context.assertEquals(500, ex.failureCode());
 
         }));
 
