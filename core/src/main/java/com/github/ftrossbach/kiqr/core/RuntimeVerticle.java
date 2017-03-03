@@ -1,12 +1,12 @@
 /**
  * Copyright © 2017 Florian Troßbach (trossbach@gmail.com)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -126,16 +126,15 @@ public class RuntimeVerticle extends AbstractVerticle {
 
     }
 
-    private KafkaStreams streams;
     private final KStreamBuilder builder;
     private final Properties props;
     private final Optional<HttpServerOptions> serverOptions;
 
-    private RuntimeVerticle(KStreamBuilder builder, Properties props) {
+    protected RuntimeVerticle(KStreamBuilder builder, Properties props) {
         this(builder, props, null);
     }
 
-    private RuntimeVerticle(KStreamBuilder builder, Properties props, HttpServerOptions serverOptions) {
+    protected RuntimeVerticle(KStreamBuilder builder, Properties props, HttpServerOptions serverOptions) {
         this.builder = builder;
         this.props = props;
         this.serverOptions = Optional.ofNullable(serverOptions);
@@ -144,35 +143,52 @@ public class RuntimeVerticle extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
-
-        String instanceId = startStreams();
         Json.mapper.registerModule(new Jdk8Module());
         registerCodecs();
+        String instanceId = UUID.randomUUID().toString();
+        vertx.<KafkaStreams>executeBlocking(future -> {
+
+            //starting streams can take a while, therefore we do it asynchronously
+            props.put(StreamsConfig.APPLICATION_SERVER_CONFIG, instanceId + ":124");
+            System.out.println(System.currentTimeMillis());
+            KafkaStreams streams = new KafkaStreams(builder, props);
+
+            System.out.println(System.currentTimeMillis());
+            streams.start();
+            future.complete(streams);
+
+        }, res -> {
+
+            if (res.succeeded()) {
+
+                Future deployFuture = deployVerticles(new InstanceResolverVerticle(res.result()), new KeyValueQueryVerticle(instanceId, res.result()),
+                        new AllKeyValuesQueryVerticle(instanceId, res.result()), new RangeKeyValueQueryVerticle(instanceId, res.result()),
+                        new WindowedQueryVerticle(instanceId, res.result()), new AllKeyValueQueryFacadeVerticle(),
+                        new KeyValueQueryFacadeVerticle(), new RangeKeyValueQueryFacadeVerticle(), new WindowedQueryFacadeVerticle());
 
 
-
-        Future deployFuture = deployVerticles(new InstanceResolverVerticle(streams), new KeyValueQueryVerticle(instanceId, streams),
-                new AllKeyValuesQueryVerticle(instanceId, streams), new RangeKeyValueQueryVerticle(instanceId, streams),
-                new WindowedQueryVerticle(instanceId, streams), new AllKeyValueQueryFacadeVerticle(),
-                new KeyValueQueryFacadeVerticle(), new RangeKeyValueQueryFacadeVerticle(), new WindowedQueryFacadeVerticle());
+                if (serverOptions.isPresent()) {
+                    deployFuture = CompositeFuture.all(deployFuture, deployVerticles(new HttpServer(serverOptions.get())));
+                }
 
 
-        if (serverOptions.isPresent()) {
-            deployFuture = CompositeFuture.all(deployFuture, deployVerticles(new HttpServer(serverOptions.get())));
-        }
+                deployFuture.setHandler(handler -> {
+                    AsyncResult ar = (AsyncResult) handler;
+                    if (ar.succeeded()) {
+                        startFuture.complete();
+                    } else {
+                        startFuture.fail(ar.cause());
+                    }
+                });
 
 
-        deployFuture.setHandler(handler -> {
-
-            AsyncResult ar = (AsyncResult) handler;
-
-            if(ar.succeeded()){
-                startFuture.complete();
+            } else {
+                startFuture.fail(res.cause());
             }
-            else {
-                startFuture.fail(ar.cause());
-            }
+
+
         });
+
 
     }
 
@@ -198,16 +214,6 @@ public class RuntimeVerticle extends AbstractVerticle {
     }
 
 
-    private String startStreams() {
-        String instanceId = UUID.randomUUID().toString();
-        props.put(StreamsConfig.APPLICATION_SERVER_CONFIG, instanceId + ":124");
-
-        streams = new KafkaStreams(builder, props);
-
-        streams.start();
-        return instanceId;
-    }
-
     private void registerCodecs() {
         registerCodec(InstanceResolverQuery.class);
         registerCodec(ScalarKeyValueQuery.class);
@@ -226,8 +232,5 @@ public class RuntimeVerticle extends AbstractVerticle {
         vertx.eventBus().registerDefaultCodec(clazz, new KiqrCodec<>(clazz));
     }
 
-    @Override
-    public void stop() throws Exception {
-        streams.close();
-    }
+
 }

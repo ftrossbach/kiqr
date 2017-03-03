@@ -1,0 +1,92 @@
+package com.github.ftrossbach.kiqr.core.query;
+
+import com.github.ftrossbach.kiqr.commons.config.Config;
+import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.AllInstancesResponse;
+import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.InstanceResolverQuery;
+import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.InstanceResolverResponse;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.eventbus.Message;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.RunTestOnContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.state.HostInfo;
+import org.apache.kafka.streams.state.StreamsMetadata;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+
+
+import java.util.Collections;
+
+
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+/**
+ * Created by ftr on 03/03/2017.
+ */
+@RunWith(VertxUnitRunner.class)
+public class InstanceResolverVerticleTest {
+
+    @Rule
+    public RunTestOnContext rule = new RunTestOnContext();
+
+    @Test(expected = IllegalArgumentException.class)
+    public void constructorWithNullParam(){
+
+        new InstanceResolverVerticle(null);
+
+    }
+
+    @Test
+    public void constructorWithValidParam(){
+
+        KafkaStreams streamMock = mock(KafkaStreams.class);
+        try {
+            new InstanceResolverVerticle(streamMock);
+        } catch (Exception e) {
+            fail();
+        }
+
+    }
+
+    @Test
+    public void deployment(TestContext context){
+
+        KafkaStreams streamMock = mock(KafkaStreams.class);
+        InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
+        rule.vertx().deployVerticle(vut, context.asyncAssertSuccess());
+
+    }
+
+    @Test
+    public void allWithSuccess(TestContext context){
+
+        KafkaStreams streamMock = mock(KafkaStreams.class);
+        when(streamMock.allMetadataForStore("store")).thenReturn(Collections.singletonList(new StreamsMetadata(new HostInfo("host", 29), Collections.emptySet(), Collections.emptySet())));
+
+        InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
+        rule.vertx().deployVerticle(vut);
+        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
+        rule.vertx().eventBus().send(Config.ALL_INSTANCES, "store", context.asyncAssertSuccess( handler -> {
+            AllInstancesResponse response = (AllInstancesResponse) handler.body();
+
+            context.assertEquals(1, response.getInstances().size());
+            context.assertEquals("host", response.getInstances().iterator().next());
+
+
+        }));
+
+
+    }
+
+
+
+}

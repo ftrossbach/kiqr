@@ -32,7 +32,7 @@ public class RestClient {
     public static void main(String[] args) {
         BlockingKiqrService service = new BlockingRestKiqrServiceImpl("localhost", 2901);
 
-        System.out.println(service.getScalarKeyValue("visitStore", String.class, "127.0.0.1", Long.class, Serdes.String(), Serdes.Long()));
+        System.out.println(service.getScalarKeyValue("visitStores", String.class, "127.0.0.1", Long.class, Serdes.String(), Serdes.Long()));
 
         System.out.println(service.getAllKeyValues("visitStore", String.class, Long.class, Serdes.String(), Serdes.Long()));
         System.out.println(service.getRangeKeyValues("visitStore", String.class, Long.class, Serdes.String(), Serdes.Long(), "127.0.0.2", "127.0.0.5"));

@@ -36,15 +36,19 @@ public class KeyValueQueryFacadeVerticle extends AbstractVerticle{
                 if(reply.succeeded()){
 
                     InstanceResolverResponse response = (InstanceResolverResponse) reply.result().body();
-                    vertx.eventBus().send(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + response.getInstanceId().get(), query, rep -> {
 
-                        ScalarKeyValueQueryResponse queryResponse = (ScalarKeyValueQueryResponse) rep.result().body();
+                    if(response.getInstanceId().isPresent()){
+                        vertx.eventBus().send(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + response.getInstanceId().get(), query, rep -> {
 
-                        msg.reply(queryResponse);
+                            ScalarKeyValueQueryResponse queryResponse = (ScalarKeyValueQueryResponse) rep.result().body();
 
-                    });
+                            msg.reply(queryResponse);
+
+                        });
+                    }
+
                 } else {
-                  msg.fail(-1, reply.cause().getMessage());
+                  msg.fail(404, reply.cause().getMessage());
                 }
 
             });

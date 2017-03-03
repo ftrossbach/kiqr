@@ -137,6 +137,11 @@ public class HttpServer extends AbstractVerticle {
                             .end(Json.encode(body));
 
 
+                } else {
+
+                    HttpServerResponse response = routingContext.response();
+                    response.setStatusCode(404);
+                    response.end();
                 }
             });
 
@@ -185,6 +190,8 @@ public class HttpServer extends AbstractVerticle {
                             .putHeader("content-type", "application/json")
                             .end(Json.encode(body));
 
+
+                } else {
 
                 }
             });

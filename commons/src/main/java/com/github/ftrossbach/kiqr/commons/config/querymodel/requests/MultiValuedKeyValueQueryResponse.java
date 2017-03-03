@@ -15,8 +15,6 @@
  */
 package com.github.ftrossbach.kiqr.commons.config.querymodel.requests;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 
 import java.util.HashMap;

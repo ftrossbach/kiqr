@@ -37,6 +37,7 @@ public class InstanceResolverVerticle extends AbstractVerticle {
     private final KafkaStreams streams;
 
     public InstanceResolverVerticle(KafkaStreams streams) {
+        if(streams == null) throw new IllegalArgumentException("Streams must not be null");
         this.streams = streams;
     }
 
@@ -56,10 +57,11 @@ public class InstanceResolverVerticle extends AbstractVerticle {
             Object deserializedKey = serde.deserializer().deserialize("?", config.getKey());
             StreamsMetadata streamsMetadata = streams.metadataForKey(config.getStoreName(), deserializedKey, serde.serializer());
 
-            if(streamsMetadata.host() != null){
+
+            if(streamsMetadata != null && streamsMetadata.host() != null){
                 msg.reply(new InstanceResolverResponse(QueryStatus.OK, Optional.of(streamsMetadata.host())));
             } else {
-                msg.reply(new InstanceResolverResponse(QueryStatus.NOT_FOUND, Optional.empty()));
+                msg.fail(404, "No instance for store found: " + config.getStoreName());
             }
 
 

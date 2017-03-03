@@ -56,7 +56,10 @@ public abstract class AbstractQueryVerticle extends AbstractVerticle{
     }
 
 
-
+    @Override
+    public void stop() throws Exception {
+        streams.close();
+    }
 
 
 
