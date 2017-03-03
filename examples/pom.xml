@@ -28,24 +28,8 @@
     </parent>
 
     <groupId>${parent.groupId}</groupId>
-    <artifactId>kiqr-rest-server</artifactId>
+    <artifactId>examples</artifactId>
     <version>${parent.version}</version>
 
-
-    <dependencies>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>kiqr-commons</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-web</artifactId>
-
-        </dependency>
-    </dependencies>
     
 </project>
