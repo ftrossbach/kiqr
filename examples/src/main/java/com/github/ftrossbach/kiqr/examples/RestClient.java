@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.ftrossbach.kiqr.client.service.rest;
+package com.github.ftrossbach.kiqr.examples;
 
 import com.github.ftrossbach.kiqr.client.service.BlockingKiqrService;
+import com.github.ftrossbach.kiqr.client.service.rest.BlockingRestKiqrServiceImpl;
 import org.apache.kafka.common.serialization.Serdes;
 
 import java.time.Instant;
@@ -26,7 +27,7 @@ import java.util.Map;
 /**
  * Created by ftr on 01/03/2017.
  */
-public class Main {
+public class RestClient {
 
     public static void main(String[] args) {
         BlockingKiqrService service = new BlockingRestKiqrServiceImpl("localhost", 2901);

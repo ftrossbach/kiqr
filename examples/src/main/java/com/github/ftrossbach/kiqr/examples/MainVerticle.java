@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.ftrossbach.kiqr.core;
+package com.github.ftrossbach.kiqr.examples;
 
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
+import com.github.ftrossbach.kiqr.core.RuntimeVerticle;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import org.apache.kafka.common.serialization.Serdes;
