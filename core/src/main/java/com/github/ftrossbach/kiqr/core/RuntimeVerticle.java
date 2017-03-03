@@ -14,6 +14,8 @@ import com.github.ftrossbach.kiqr.core.query.kv.RangeKeyValueQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.windowed.WindowedQueryVerticle;
 import com.github.ftrossbach.kiqr.rest.server.HttpServer;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.Json;
@@ -23,16 +25,16 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
 
-import java.util.Optional;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by ftr on 18/02/2017.
  */
-public class RuntimeVerticle extends AbstractVerticle{
+public class RuntimeVerticle extends AbstractVerticle {
 
-    public static class Builder{
+    public static class Builder {
 
         private final KStreamBuilder builder;
         private final Properties properties;
@@ -48,20 +50,22 @@ public class RuntimeVerticle extends AbstractVerticle{
             this.properties = properties;
         }
 
-        public Builder withApplicationId(String applicationId){
+        public Builder withApplicationId(String applicationId) {
             properties.put(StreamsConfig.APPLICATION_ID_CONFIG, applicationId);
             return this;
         }
-        public Builder withBootstrapServers(String servers){
+
+        public Builder withBootstrapServers(String servers) {
             properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, servers);
             return this;
         }
-        public Builder withBuffering(Integer buffer){
+
+        public Builder withBuffering(Integer buffer) {
             properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, buffer.toString());
             return this;
         }
 
-        public Builder withoutBuffering(){
+        public Builder withoutBuffering() {
             properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, "0");
             return this;
         }
@@ -86,24 +90,23 @@ public class RuntimeVerticle extends AbstractVerticle{
             return this;
         }
 
-        public Builder withHttpServer(HttpServerOptions options){
+        public Builder withHttpServer(HttpServerOptions options) {
             this.httpServerOptions = Optional.ofNullable(options);
             return this;
         }
 
-        public Builder withHttpServer(int port){
+        public Builder withHttpServer(int port) {
             this.httpServerOptions = Optional.ofNullable(new HttpServerOptions().setPort(port));
             return this;
         }
 
 
-        public RuntimeVerticle build(){
+        public RuntimeVerticle build() {
 
             return httpServerOptions
                     .map(options -> new RuntimeVerticle(builder, properties, options))
                     .orElseGet(() -> new RuntimeVerticle(builder, properties));
         }
-
 
 
     }
@@ -114,49 +117,71 @@ public class RuntimeVerticle extends AbstractVerticle{
     private final Optional<HttpServerOptions> serverOptions;
 
     private RuntimeVerticle(KStreamBuilder builder, Properties props) {
-       this(builder, props, null);
+        this(builder, props, null);
     }
 
-    private RuntimeVerticle(KStreamBuilder builder, Properties props,HttpServerOptions serverOptions){
+    private RuntimeVerticle(KStreamBuilder builder, Properties props, HttpServerOptions serverOptions) {
         this.builder = builder;
         this.props = props;
         this.serverOptions = Optional.ofNullable(serverOptions);
     }
 
 
-
     @Override
     public void start(Future<Void> startFuture) throws Exception {
-        String instanceId = startStreams();
 
+        String instanceId = startStreams();
+        Json.mapper.registerModule(new Jdk8Module());
         registerCodecs();
 
-        vertx.deployVerticle(new InstanceResolverVerticle(streams));
-        vertx.deployVerticle(new KeyValueQueryVerticle(instanceId, streams));
-        vertx.deployVerticle(new AllKeyValuesQueryVerticle(instanceId, streams));
-        vertx.deployVerticle(new RangeKeyValueQueryVerticle(instanceId, streams));
-        vertx.deployVerticle(new WindowedQueryVerticle(instanceId, streams));
 
-        vertx.deployVerticle(new AllKeyValueQueryFacadeVerticle());
-        vertx.deployVerticle(new KeyValueQueryFacadeVerticle());
-        vertx.deployVerticle(new RangeKeyValueQueryFacadeVerticle());
-        vertx.deployVerticle(new WindowedQueryFacadeVerticle());
 
-        Json.mapper.registerModule(new Jdk8Module());
+        Future deployFuture = deployVerticles(new InstanceResolverVerticle(streams), new KeyValueQueryVerticle(instanceId, streams),
+                new AllKeyValuesQueryVerticle(instanceId, streams), new RangeKeyValueQueryVerticle(instanceId, streams),
+                new WindowedQueryVerticle(instanceId, streams), new AllKeyValueQueryFacadeVerticle(),
+                new KeyValueQueryFacadeVerticle(), new RangeKeyValueQueryFacadeVerticle(), new WindowedQueryFacadeVerticle());
 
-        if(serverOptions.isPresent()){
-            vertx.deployVerticle(new HttpServer(serverOptions.get()), handler -> {
-                if(handler.succeeded()){
-                    startFuture.complete();
-                } else {
-                    startFuture.fail(handler.cause());
-                }
-            });
-        } else {
-            startFuture.complete();
+
+        if (serverOptions.isPresent()) {
+            deployFuture = CompositeFuture.all(deployFuture, deployVerticles(new HttpServer(serverOptions.get())));
         }
 
+
+        deployFuture.setHandler(handler -> {
+
+            AsyncResult ar = (AsyncResult) handler;
+
+            if(ar.succeeded()){
+                startFuture.complete();
+            }
+            else {
+                startFuture.fail(ar.cause());
+            }
+        });
+
     }
+
+    private Future deployVerticles(AbstractVerticle... verticles) {
+
+
+        Stream<AbstractVerticle> stream = Arrays.stream(verticles);
+
+        List<Future> futures = stream
+                .map(verticle -> {
+
+                    Future<String> future = Future.<String>future();
+
+                    vertx.deployVerticle(verticle, future.completer());
+
+                    return future;
+                })
+                .map(future -> (Future) future)
+                .collect(Collectors.toList());
+
+        return CompositeFuture.all(futures);
+
+    }
+
 
     private String startStreams() {
         String instanceId = UUID.randomUUID().toString();
@@ -182,7 +207,7 @@ public class RuntimeVerticle extends AbstractVerticle{
 
     }
 
-    private <T> void registerCodec(Class<T> clazz){
+    private <T> void registerCodec(Class<T> clazz) {
         vertx.eventBus().registerDefaultCodec(clazz, new KiqrCodec<>(clazz));
     }
 
