@@ -33,6 +33,7 @@ import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.state.HostInfo;
 import org.apache.kafka.streams.state.StreamsMetadata;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,6 +60,14 @@ public class InstanceResolverVerticleTest {
 
     @Rule
     public RunTestOnContext rule = new RunTestOnContext();
+
+    @Before
+    public void setUp(){
+        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
+        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverResponse.class, new KiqrCodec(InstanceResolverResponse.class));
+
+    }
 
     @Test(expected = IllegalArgumentException.class)
     public void constructorWithNullParam(){
@@ -95,17 +104,18 @@ public class InstanceResolverVerticleTest {
         when(streamMock.allMetadataForStore("store")).thenReturn(Collections.singletonList(new StreamsMetadata(new HostInfo("host", 29), Collections.emptySet(), Collections.emptySet())));
 
         InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
-        rule.vertx().deployVerticle(vut, context.asyncAssertSuccess());
-        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
-        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
-        rule.vertx().eventBus().send(Config.ALL_INSTANCES, "store", context.asyncAssertSuccess( handler -> {
-            AllInstancesResponse response = (AllInstancesResponse) handler.body();
+        rule.vertx().deployVerticle(vut, context.asyncAssertSuccess(deployment -> {
+            rule.vertx().eventBus().send(Config.ALL_INSTANCES, "store", context.asyncAssertSuccess( handler -> {
+                AllInstancesResponse response = (AllInstancesResponse) handler.body();
 
-            context.assertEquals(1, response.getInstances().size());
-            context.assertEquals("host", response.getInstances().iterator().next());
+                context.assertEquals(1, response.getInstances().size());
+                context.assertEquals("host", response.getInstances().iterator().next());
 
+
+            }));
 
         }));
+
 
 
     }
@@ -119,19 +129,18 @@ public class InstanceResolverVerticleTest {
         metadata.add(new StreamsMetadata(new HostInfo("host2", 29),Collections.emptySet(), Collections.emptySet()));
 
         when(streamMock.allMetadataForStore("store")).thenReturn(metadata);
-
         InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
-        rule.vertx().deployVerticle(vut);
-        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
-        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
-        rule.vertx().eventBus().send(Config.ALL_INSTANCES, "store", context.asyncAssertSuccess( handler -> {
-            AllInstancesResponse response = (AllInstancesResponse) handler.body();
+        rule.vertx().deployVerticle(vut, context.asyncAssertSuccess(deployment -> {
+            rule.vertx().eventBus().send(Config.ALL_INSTANCES, "store", context.asyncAssertSuccess( handler -> {
+                AllInstancesResponse response = (AllInstancesResponse) handler.body();
 
-            context.assertEquals(2, response.getInstances().size());
-            context.assertTrue(response.getInstances().contains("host1"));
-            context.assertTrue(response.getInstances().contains("host2"));
+                context.assertEquals(2, response.getInstances().size());
+                context.assertTrue(response.getInstances().contains("host1"));
+                context.assertTrue(response.getInstances().contains("host2"));
 
+            }));
         }));
+
     }
 
     @Test
@@ -142,15 +151,15 @@ public class InstanceResolverVerticleTest {
         when(streamMock.allMetadataForStore("store")).thenReturn(Collections.emptyList());
 
         InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
-        rule.vertx().deployVerticle(vut);
-        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
-        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
-        rule.vertx().eventBus().send(Config.ALL_INSTANCES, "store", context.asyncAssertFailure( handler -> {
-            context.assertTrue(handler instanceof ReplyException);
-            ReplyException ex = (ReplyException) handler;
-            context.assertEquals(404, ex.failureCode());
+        rule.vertx().deployVerticle(vut, context.asyncAssertSuccess(deployment -> {
+            rule.vertx().eventBus().send(Config.ALL_INSTANCES, "store", context.asyncAssertFailure( handler -> {
+                context.assertTrue(handler instanceof ReplyException);
+                ReplyException ex = (ReplyException) handler;
+                context.assertEquals(404, ex.failureCode());
 
+            }));
         }));
+
 
 
     }
@@ -163,16 +172,16 @@ public class InstanceResolverVerticleTest {
         when(streamMock.allMetadataForStore("store")).thenThrow(IllegalArgumentException.class);
 
         InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
-        rule.vertx().deployVerticle(vut);
-        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
-        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
-        rule.vertx().eventBus().send(Config.ALL_INSTANCES, "store", context.asyncAssertFailure( handler -> {
+        rule.vertx().deployVerticle(vut, context.asyncAssertSuccess(deployment -> {
+            rule.vertx().eventBus().send(Config.ALL_INSTANCES, "store", context.asyncAssertFailure( handler -> {
 
-           context.assertTrue(handler instanceof ReplyException);
-           ReplyException ex = (ReplyException) handler;
-           context.assertEquals(500, ex.failureCode());
+                context.assertTrue(handler instanceof ReplyException);
+                ReplyException ex = (ReplyException) handler;
+                context.assertEquals(500, ex.failureCode());
 
+            }));
         }));
+
 
 
     }
@@ -185,18 +194,19 @@ public class InstanceResolverVerticleTest {
         when(streamMock.metadataForKey(eq("store"), any(), any(Serializer.class))).thenReturn(new StreamsMetadata(new HostInfo("host", 29), Collections.emptySet(), Collections.emptySet()));
 
         InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
-        rule.vertx().deployVerticle(vut);
-        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
-        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverResponse.class, new KiqrCodec(InstanceResolverResponse.class));
-        InstanceResolverQuery query = new InstanceResolverQuery("store", Serdes.String().getClass().getName(), "key".getBytes());
+        rule.vertx().deployVerticle(vut, context.asyncAssertSuccess(deployment -> {
+            InstanceResolverQuery query = new InstanceResolverQuery("store", Serdes.String().getClass().getName(), "key".getBytes());
 
-        rule.vertx().eventBus().send(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, query, context.asyncAssertSuccess( handler -> {
+            rule.vertx().eventBus().send(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, query, context.asyncAssertSuccess( handler -> {
 
-            InstanceResolverResponse body = (InstanceResolverResponse) handler.body();
-            context.assertTrue(body.getInstanceId().isPresent());
-            context.assertEquals("host", body.getInstanceId().get());
+                InstanceResolverResponse body = (InstanceResolverResponse) handler.body();
+                context.assertTrue(body.getInstanceId().isPresent());
+                context.assertEquals("host", body.getInstanceId().get());
 
+            }));
         }));
+
+
 
 
     }
@@ -209,19 +219,19 @@ public class InstanceResolverVerticleTest {
         when(streamMock.metadataForKey(eq("store"), any(), any(Serializer.class))).thenReturn(null);
 
         InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
-        rule.vertx().deployVerticle(vut);
-        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
-        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverResponse.class, new KiqrCodec(InstanceResolverResponse.class));
-        InstanceResolverQuery query = new InstanceResolverQuery("store", Serdes.String().getClass().getName(), "key".getBytes());
+        rule.vertx().deployVerticle(vut, context.asyncAssertSuccess(deployment -> {
+            InstanceResolverQuery query = new InstanceResolverQuery("store", Serdes.String().getClass().getName(), "key".getBytes());
 
-        rule.vertx().eventBus().send(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, query, context.asyncAssertFailure( handler -> {
+            rule.vertx().eventBus().send(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, query, context.asyncAssertFailure( handler -> {
 
-            context.assertTrue(handler instanceof ReplyException);
-            ReplyException ex = (ReplyException) handler;
-            context.assertEquals(404, ex.failureCode());
+                context.assertTrue(handler instanceof ReplyException);
+                ReplyException ex = (ReplyException) handler;
+                context.assertEquals(404, ex.failureCode());
 
 
+            }));
         }));
+
 
 
     }
@@ -234,17 +244,17 @@ public class InstanceResolverVerticleTest {
         when(streamMock.metadataForKey(eq("store"), any(), any(Serializer.class))).thenThrow(IllegalArgumentException.class);
 
         InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
-        rule.vertx().deployVerticle(vut);
-        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
-        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
-        InstanceResolverQuery query = new InstanceResolverQuery("store", Serdes.String().getClass().getName(), "key".getBytes());
-        rule.vertx().eventBus().send(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, query, context.asyncAssertFailure( handler -> {
+        rule.vertx().deployVerticle(vut, context.asyncAssertSuccess(deployment -> {
+            InstanceResolverQuery query = new InstanceResolverQuery("store", Serdes.String().getClass().getName(), "key".getBytes());
+            rule.vertx().eventBus().send(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, query, context.asyncAssertFailure( handler -> {
 
-            context.assertTrue(handler instanceof ReplyException);
-            ReplyException ex = (ReplyException) handler;
-            context.assertEquals(500, ex.failureCode());
+                context.assertTrue(handler instanceof ReplyException);
+                ReplyException ex = (ReplyException) handler;
+                context.assertEquals(500, ex.failureCode());
 
+            }));
         }));
+
 
 
     }
@@ -257,17 +267,17 @@ public class InstanceResolverVerticleTest {
         when(streamMock.metadataForKey(eq("store"), any(), any(Serializer.class))).thenThrow(IllegalArgumentException.class);
 
         InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
-        rule.vertx().deployVerticle(vut);
-        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
-        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
-        InstanceResolverQuery query = new InstanceResolverQuery("store", "i am not a serde", "key".getBytes());
-        rule.vertx().eventBus().send(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, query, context.asyncAssertFailure( handler -> {
+        rule.vertx().deployVerticle(vut, context.asyncAssertSuccess(deployment -> {
+            InstanceResolverQuery query = new InstanceResolverQuery("store", "i am not a serde", "key".getBytes());
+            rule.vertx().eventBus().send(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, query, context.asyncAssertFailure( handler -> {
 
-            context.assertTrue(handler instanceof ReplyException);
-            ReplyException ex = (ReplyException) handler;
-            context.assertEquals(400, ex.failureCode());
+                context.assertTrue(handler instanceof ReplyException);
+                ReplyException ex = (ReplyException) handler;
+                context.assertEquals(400, ex.failureCode());
 
+            }));
         }));
+
 
 
     }
@@ -280,17 +290,17 @@ public class InstanceResolverVerticleTest {
         when(streamMock.metadataForKey(eq("store"), any(), any(Serializer.class))).thenThrow(IllegalArgumentException.class);
 
         InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
-        rule.vertx().deployVerticle(vut);
-        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
-        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
-        InstanceResolverQuery query = new InstanceResolverQuery("store", "java.lang.Object", "key".getBytes());
-        rule.vertx().eventBus().send(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, query, context.asyncAssertFailure( handler -> {
+        rule.vertx().deployVerticle(vut, context.asyncAssertSuccess(deployment -> {
+            InstanceResolverQuery query = new InstanceResolverQuery("store", "java.lang.Object", "key".getBytes());
+            rule.vertx().eventBus().send(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, query, context.asyncAssertFailure( handler -> {
 
-            context.assertTrue(handler instanceof ReplyException);
-            ReplyException ex = (ReplyException) handler;
-            context.assertEquals(400, ex.failureCode());
+                context.assertTrue(handler instanceof ReplyException);
+                ReplyException ex = (ReplyException) handler;
+                context.assertEquals(400, ex.failureCode());
 
+            }));
         }));
+
 
 
     }
