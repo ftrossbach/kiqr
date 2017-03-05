@@ -78,7 +78,7 @@ public class InstanceResolverVerticle extends AbstractKiqrVerticle {
 
             try {
                 String store = (String) msg.body();
-                Set<String> instances = streams.allMetadataForStore(store).stream().map(metadata -> metadata.host()).collect(Collectors.toSet());
+                Set<String> instances = streams.allMetadataForStore(store).stream().map(StreamsMetadata::host).collect(Collectors.toSet());
 
                 if(instances.isEmpty()){
                     msg.fail(404, "No instance for store found: " + store);

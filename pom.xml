@@ -152,29 +152,39 @@
         <developerConnection>scm:git:git@github.com:ftrossbach/kiqr.git</developerConnection>
     </scm>
 
-    <build><plugins><plugin>
-        <groupId>com.mycila</groupId>
-        <artifactId>license-maven-plugin</artifactId>
-        <version>3.0</version>
-        <configuration>
-            <header>APACHE-2.txt</header>
-            <properties>
-                <owner>Florian Troßbach</owner>
-                <email>trossbach@gmail.com</email>
-            </properties>
-            <excludes>
-                <exclude>**/README*</exclude>
-                <exclude>src/test/resources/**</exclude>
-                <exclude>src/main/resources/**</exclude>
-            </excludes>
-        </configuration>
-        <executions>
-            <execution>
-                <goals>
-                    <goal>check</goal>
-                </goals>
-            </execution>
-        </executions>
-    </plugin></plugins></build>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>3.0</version>
+                <configuration>
+                    <header>APACHE-2.txt</header>
+                    <properties>
+                        <owner>Florian Troßbach</owner>
+                        <email>trossbach@gmail.com</email>
+                    </properties>
+                    <excludes>
+                        <exclude>**/README*</exclude>
+                        <exclude>src/test/resources/**</exclude>
+                        <exclude>src/main/resources/**</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.eluder.coveralls</groupId>
+                <artifactId>coveralls-maven-plugin</artifactId>
+                <version>4.3.0</version>
+
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
