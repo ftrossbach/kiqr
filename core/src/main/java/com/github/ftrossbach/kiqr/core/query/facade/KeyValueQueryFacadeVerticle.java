@@ -21,6 +21,7 @@ import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.InstanceRes
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQueryResponse;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.eventbus.ReplyException;
 
 /**
  * Created by ftr on 22/02/2017.
@@ -40,15 +41,30 @@ public class KeyValueQueryFacadeVerticle extends AbstractVerticle{
                     if(response.getInstanceId().isPresent()){
                         vertx.eventBus().send(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + response.getInstanceId().get(), query, rep -> {
 
-                            ScalarKeyValueQueryResponse queryResponse = (ScalarKeyValueQueryResponse) rep.result().body();
+                            if(rep.succeeded()){
+                                ScalarKeyValueQueryResponse queryResponse = (ScalarKeyValueQueryResponse) rep.result().body();
 
-                            msg.reply(queryResponse);
+                                msg.reply(queryResponse);
+                            }
+                            else {
+                                if(rep.cause() instanceof ReplyException){
+                                    ReplyException cause = (ReplyException) rep.cause();
+                                    msg.fail(cause.failureCode(), cause.getMessage());
+                                } else {
+                                    msg.fail(500, rep.cause().getMessage());
+                                }
+                            }
 
                         });
                     }
 
                 } else {
-                  msg.fail(404, reply.cause().getMessage());
+                  if(reply.cause() instanceof ReplyException){
+                      ReplyException cause = (ReplyException) reply.cause();
+                      msg.fail(cause.failureCode(), cause.getMessage());
+                  } else {
+                      msg.fail(500, reply.cause().getMessage());
+                  }
                 }
 
             });
