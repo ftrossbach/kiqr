@@ -21,8 +21,10 @@ import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.QueryStatus
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQueryResponse;
 import com.github.ftrossbach.kiqr.core.query.AbstractKiqrVerticle;
 import com.github.ftrossbach.kiqr.core.query.AbstractQueryVerticle;
+import com.github.ftrossbach.kiqr.core.query.exceptions.SerdeNotFoundException;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.errors.InvalidStateStoreException;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 
@@ -43,18 +45,26 @@ public class KeyValueQueryVerticle extends AbstractQueryVerticle {
 
         vertx.eventBus().consumer(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + instanceId, msg -> {
 
-            ScalarKeyValueQuery query = (ScalarKeyValueQuery) msg.body();
+            try {
+                ScalarKeyValueQuery query = (ScalarKeyValueQuery) msg.body();
 
-            Serde<Object> keySerde = getSerde(query.getKeySerde());
-            Serde<Object> valueSerde = getSerde(query.getValueSerde());
+                Serde<Object> keySerde = getSerde(query.getKeySerde());
+                Serde<Object> valueSerde = getSerde(query.getValueSerde());
 
-            Object deserializedKey = deserializeObject(keySerde, query.getKey());
-            ReadOnlyKeyValueStore<Object, Object> kvStore = streams.store(query.getStoreName(), QueryableStoreTypes.keyValueStore());
-            Object result = kvStore.get(deserializedKey);
-            if (result != null) {
-                msg.reply(new ScalarKeyValueQueryResponse(QueryStatus.OK, base64Encode(valueSerde, result)));
-            } else {
-                msg.reply(new ScalarKeyValueQueryResponse(QueryStatus.NOT_FOUND, null));
+                Object deserializedKey = deserializeObject(keySerde, query.getKey());
+                ReadOnlyKeyValueStore<Object, Object> kvStore = streams.store(query.getStoreName(), QueryableStoreTypes.keyValueStore());
+                Object result = kvStore.get(deserializedKey);
+                if (result != null) {
+                    msg.reply(new ScalarKeyValueQueryResponse(QueryStatus.OK, base64Encode(valueSerde, result)));
+                } else {
+                    msg.reply(new ScalarKeyValueQueryResponse(QueryStatus.NOT_FOUND, null));
+                }
+            }  catch (SerdeNotFoundException e) {
+                msg.fail(400, e.getMessage());
+            } catch (InvalidStateStoreException e) {
+                msg.fail(409, String.format("Store not available due to rebalancing"));
+            } catch (RuntimeException e) {
+                msg.fail(500, e.getMessage());
             }
 
         });

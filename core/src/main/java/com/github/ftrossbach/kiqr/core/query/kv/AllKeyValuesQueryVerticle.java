@@ -70,8 +70,7 @@ public class AllKeyValuesQueryVerticle extends AbstractQueryVerticle {
                 msg.fail(400, e.getMessage());
             } catch (InvalidStateStoreException e) {
                 msg.fail(409, String.format("Store not available due to rebalancing"));
-            }
-            catch (RuntimeException e) {
+            } catch (RuntimeException e) {
                 msg.fail(500, e.getMessage());
             }
         });

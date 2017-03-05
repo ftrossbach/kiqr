@@ -242,4 +242,27 @@ public class AllKeyValuesQueryVerticleTest {
         }));
 
     }
+
+    @Test
+    public void unexpectedExceptionOnQuery(TestContext context){
+        KafkaStreams streamMock = mock(KafkaStreams.class);
+        ReadOnlyKeyValueStore<Object, Object> storeMock = mock(ReadOnlyKeyValueStore.class);
+        when(streamMock.store(eq("store"), any(QueryableStoreType.class))).thenReturn(storeMock);
+        when(storeMock.all()).thenThrow(IllegalArgumentException.class);
+
+        rule.vertx().deployVerticle(new AllKeyValuesQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
+
+            AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
+
+            rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertFailure(handler ->{
+
+                context.assertTrue(handler instanceof ReplyException);
+                ReplyException ex = (ReplyException) handler;
+                context.assertEquals(500, ex.failureCode());
+
+            }));
+
+        }));
+
+    }
 }
