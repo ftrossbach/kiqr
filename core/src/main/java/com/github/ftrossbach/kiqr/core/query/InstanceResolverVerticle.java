@@ -21,7 +21,6 @@ import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.InstanceRes
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.InstanceResolverResponse;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.QueryStatus;
 import com.github.ftrossbach.kiqr.core.query.exceptions.SerdeNotFoundException;
-import io.vertx.core.AbstractVerticle;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.state.StreamsMetadata;
@@ -33,11 +32,12 @@ import java.util.stream.Collectors;
 /**
  * Created by ftr on 19/02/2017.
  */
-public class InstanceResolverVerticle extends AbstractVerticle {
+public class InstanceResolverVerticle extends AbstractKiqrVerticle {
 
     private final KafkaStreams streams;
 
     public InstanceResolverVerticle(KafkaStreams streams) {
+        super(streams);
         if(streams == null) throw new IllegalArgumentException("Streams must not be null");
         this.streams = streams;
     }
@@ -48,25 +48,25 @@ public class InstanceResolverVerticle extends AbstractVerticle {
         vertx.eventBus().consumer(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, msg -> {
 
 
-
-
-            InstanceResolverQuery config = (InstanceResolverQuery) msg.body();
-
-            Serde<Object> serde = null;
             try {
-               serde = (Serde<Object>) Class.forName(config.getKeySerde()).newInstance();
-            } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-                throw new SerdeNotFoundException(e);
+                InstanceResolverQuery config = (InstanceResolverQuery) msg.body();
+
+                Serde<Object> serde = getSerde(config.getKeySerde());
+
+                Object deserializedKey = serde.deserializer().deserialize("?", config.getKey());
+                StreamsMetadata streamsMetadata = streams.metadataForKey(config.getStoreName(), deserializedKey, serde.serializer());
+
+
+                if(streamsMetadata != null && streamsMetadata.host() != null){
+                    msg.reply(new InstanceResolverResponse(QueryStatus.OK, Optional.of(streamsMetadata.host())));
+                } else {
+                    msg.fail(404, "No instance for store found: " + config.getStoreName());
+                }
+            } catch (SerdeNotFoundException e){
+                msg.fail(400, e.getMessage());
             }
-
-            Object deserializedKey = serde.deserializer().deserialize("?", config.getKey());
-            StreamsMetadata streamsMetadata = streams.metadataForKey(config.getStoreName(), deserializedKey, serde.serializer());
-
-
-            if(streamsMetadata != null && streamsMetadata.host() != null){
-                msg.reply(new InstanceResolverResponse(QueryStatus.OK, Optional.of(streamsMetadata.host())));
-            } else {
-                msg.fail(404, "No instance for store found: " + config.getStoreName());
+            catch (RuntimeException e) {
+                msg.fail(500, e.getMessage());
             }
 
 
@@ -80,7 +80,12 @@ public class InstanceResolverVerticle extends AbstractVerticle {
                 String store = (String) msg.body();
                 Set<String> instances = streams.allMetadataForStore(store).stream().map(metadata -> metadata.host()).collect(Collectors.toSet());
 
-                msg.reply(new AllInstancesResponse(instances));
+                if(instances.isEmpty()){
+                    msg.fail(404, "No instance for store found: " + store);
+                } else{
+                    msg.reply(new AllInstancesResponse(instances));
+                }
+
             } catch(RuntimeException e){
                 msg.fail(500, e.getMessage());
             }

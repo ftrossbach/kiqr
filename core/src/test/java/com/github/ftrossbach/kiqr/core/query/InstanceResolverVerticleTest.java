@@ -28,6 +28,8 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.state.HostInfo;
 import org.apache.kafka.streams.state.StreamsMetadata;
@@ -43,6 +45,9 @@ import java.util.List;
 
 
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -90,7 +95,7 @@ public class InstanceResolverVerticleTest {
         when(streamMock.allMetadataForStore("store")).thenReturn(Collections.singletonList(new StreamsMetadata(new HostInfo("host", 29), Collections.emptySet(), Collections.emptySet())));
 
         InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
-        rule.vertx().deployVerticle(vut);
+        rule.vertx().deployVerticle(vut, context.asyncAssertSuccess());
         rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
         rule.vertx().eventBus().send(Config.ALL_INSTANCES, "store", context.asyncAssertSuccess( handler -> {
@@ -140,11 +145,10 @@ public class InstanceResolverVerticleTest {
         rule.vertx().deployVerticle(vut);
         rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
-        rule.vertx().eventBus().send(Config.ALL_INSTANCES, "store", context.asyncAssertSuccess( handler -> {
-            AllInstancesResponse response = (AllInstancesResponse) handler.body();
-
-
-            context.assertTrue(response.getInstances().isEmpty());
+        rule.vertx().eventBus().send(Config.ALL_INSTANCES, "store", context.asyncAssertFailure( handler -> {
+            context.assertTrue(handler instanceof ReplyException);
+            ReplyException ex = (ReplyException) handler;
+            context.assertEquals(404, ex.failureCode());
 
         }));
 
@@ -152,7 +156,7 @@ public class InstanceResolverVerticleTest {
     }
 
     @Test
-    public void unexpectedRuntimeException(TestContext context){
+    public void unexpectedRuntimeExceptionForAll(TestContext context){
 
         KafkaStreams streamMock = mock(KafkaStreams.class);
 
@@ -167,6 +171,124 @@ public class InstanceResolverVerticleTest {
            context.assertTrue(handler instanceof ReplyException);
            ReplyException ex = (ReplyException) handler;
            context.assertEquals(500, ex.failureCode());
+
+        }));
+
+
+    }
+
+    @Test
+    public void successfulSingleInstance(TestContext context){
+
+        KafkaStreams streamMock = mock(KafkaStreams.class);
+
+        when(streamMock.metadataForKey(eq("store"), any(), any(Serializer.class))).thenReturn(new StreamsMetadata(new HostInfo("host", 29), Collections.emptySet(), Collections.emptySet()));
+
+        InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
+        rule.vertx().deployVerticle(vut);
+        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverResponse.class, new KiqrCodec(InstanceResolverResponse.class));
+        InstanceResolverQuery query = new InstanceResolverQuery("store", Serdes.String().getClass().getName(), "key".getBytes());
+
+        rule.vertx().eventBus().send(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, query, context.asyncAssertSuccess( handler -> {
+
+            InstanceResolverResponse body = (InstanceResolverResponse) handler.body();
+            context.assertTrue(body.getInstanceId().isPresent());
+            context.assertEquals("host", body.getInstanceId().get());
+
+        }));
+
+
+    }
+
+    @Test
+    public void unsuccessfulSingleInstance(TestContext context){
+
+        KafkaStreams streamMock = mock(KafkaStreams.class);
+
+        when(streamMock.metadataForKey(eq("store"), any(), any(Serializer.class))).thenReturn(null);
+
+        InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
+        rule.vertx().deployVerticle(vut);
+        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverResponse.class, new KiqrCodec(InstanceResolverResponse.class));
+        InstanceResolverQuery query = new InstanceResolverQuery("store", Serdes.String().getClass().getName(), "key".getBytes());
+
+        rule.vertx().eventBus().send(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, query, context.asyncAssertFailure( handler -> {
+
+            context.assertTrue(handler instanceof ReplyException);
+            ReplyException ex = (ReplyException) handler;
+            context.assertEquals(404, ex.failureCode());
+
+
+        }));
+
+
+    }
+
+    @Test
+    public void unexpectedRuntimeExceptionForSingle(TestContext context){
+
+        KafkaStreams streamMock = mock(KafkaStreams.class);
+
+        when(streamMock.metadataForKey(eq("store"), any(), any(Serializer.class))).thenThrow(IllegalArgumentException.class);
+
+        InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
+        rule.vertx().deployVerticle(vut);
+        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
+        InstanceResolverQuery query = new InstanceResolverQuery("store", Serdes.String().getClass().getName(), "key".getBytes());
+        rule.vertx().eventBus().send(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, query, context.asyncAssertFailure( handler -> {
+
+            context.assertTrue(handler instanceof ReplyException);
+            ReplyException ex = (ReplyException) handler;
+            context.assertEquals(500, ex.failureCode());
+
+        }));
+
+
+    }
+
+    @Test
+    public void invalidSerdeClassNameForSingle(TestContext context){
+
+        KafkaStreams streamMock = mock(KafkaStreams.class);
+
+        when(streamMock.metadataForKey(eq("store"), any(), any(Serializer.class))).thenThrow(IllegalArgumentException.class);
+
+        InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
+        rule.vertx().deployVerticle(vut);
+        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
+        InstanceResolverQuery query = new InstanceResolverQuery("store", "i am not a serde", "key".getBytes());
+        rule.vertx().eventBus().send(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, query, context.asyncAssertFailure( handler -> {
+
+            context.assertTrue(handler instanceof ReplyException);
+            ReplyException ex = (ReplyException) handler;
+            context.assertEquals(400, ex.failureCode());
+
+        }));
+
+
+    }
+
+    @Test
+    public void serdeClassIsNotSerdeForSingle(TestContext context){
+
+        KafkaStreams streamMock = mock(KafkaStreams.class);
+
+        when(streamMock.metadataForKey(eq("store"), any(), any(Serializer.class))).thenThrow(IllegalArgumentException.class);
+
+        InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
+        rule.vertx().deployVerticle(vut);
+        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
+        InstanceResolverQuery query = new InstanceResolverQuery("store", "java.lang.Object", "key".getBytes());
+        rule.vertx().eventBus().send(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, query, context.asyncAssertFailure( handler -> {
+
+            context.assertTrue(handler instanceof ReplyException);
+            ReplyException ex = (ReplyException) handler;
+            context.assertEquals(400, ex.failureCode());
 
         }));
 
