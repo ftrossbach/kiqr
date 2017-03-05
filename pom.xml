@@ -30,6 +30,7 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <vert.x>3.4.0.Beta1</vert.x>
     </properties>
 
@@ -49,22 +50,22 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>kiqr-commons</artifactId>
-                <version>${version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>kiqr-core</artifactId>
-                <version>${version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>kiqr-rest-server</artifactId>
-                <version>${version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>kiqr-rest-client</artifactId>
-                <version>${version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.vertx</groupId>
@@ -79,12 +80,6 @@
             <dependency>
                 <groupId>io.vertx</groupId>
                 <artifactId>vertx-hazelcast</artifactId>
-                <version>${vert.x}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-unit</artifactId>
-                <scope>test</scope>
                 <version>${vert.x}</version>
             </dependency>
             <dependency>
