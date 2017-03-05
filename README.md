@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/ftrossbach/kiqr.svg?branch=master)](https://travis-ci.org/ftrossbach/kiqr)
+[![Coverage Status](https://coveralls.io/repos/github/ftrossbach/kiqr/badge.svg)](https://coveralls.io/github/ftrossbach/kiqr)
 
 #KIQR - Kafka Interactive Query Runtime
 
