@@ -5,3 +5,6 @@ notifications:
   email:
     on_success: never # default: change
     on_failure: always # default: always
+
+after_success:
+  - mvn clean test jacoco:report coveralls:report
