@@ -59,7 +59,7 @@ public class AllKeyValueQueryFacadeVerticle extends AbstractVerticle{
                             MultiValuedKeyValueQueryResponse compoundResult = list.stream().map(message -> message.body()).reduce(new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b));
                             msg.reply(compoundResult);
                         } else {
-                            compoundFutureHandler.cause().printStackTrace();
+
                             ReplyException cause = (ReplyException) compoundFutureHandler.cause();
                             msg.fail(cause.failureCode(), cause.getMessage());
                         }

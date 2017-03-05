@@ -12,13 +12,16 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by ftr on 05/03/2017.
  */
 @RunWith(VertxUnitRunner.class)
-public class AllKeyValueQueryFacadeVerticleTest {
+public class RangeKeyValueQueryFacadeVerticleTest {
 
     @Rule
     public RunTestOnContext rule = new RunTestOnContext();
@@ -26,7 +29,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
     @Before
     public void setUp(){
         rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverResponse.class, new KiqrCodec(InstanceResolverResponse.class));
-        rule.vertx().eventBus().registerDefaultCodec(AllKeyValuesQuery.class, new KiqrCodec(AllKeyValuesQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(RangeKeyValueQuery.class, new KiqrCodec(RangeKeyValueQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(MultiValuedKeyValueQueryResponse.class, new KiqrCodec(MultiValuedKeyValueQueryResponse.class));
 
     }
@@ -41,18 +44,18 @@ public class AllKeyValueQueryFacadeVerticleTest {
             msg.reply(new AllInstancesResponse(hosts));
         });
 
-        rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host1", msg -> {
+        rule.vertx().eventBus().consumer(Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host1", msg -> {
             Map<String, String> result = new HashMap<>();
             result.put("key1", "value1");
             msg.reply(new MultiValuedKeyValueQueryResponse(QueryStatus.OK, result));
         });
 
 
-        rule.vertx().deployVerticle(new AllKeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new RangeKeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
 
-            AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
+            RangeKeyValueQuery query = new RangeKeyValueQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName(), "key".getBytes(), "key".getBytes());
 
-            rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, query, context.asyncAssertSuccess(reply ->{
+            rule.vertx().eventBus().send(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, query, context.asyncAssertSuccess(reply ->{
 
                 context.assertTrue(reply.body() instanceof MultiValuedKeyValueQueryResponse);
                 MultiValuedKeyValueQueryResponse response = (MultiValuedKeyValueQueryResponse) reply.body();
@@ -79,22 +82,22 @@ public class AllKeyValueQueryFacadeVerticleTest {
             msg.reply(new AllInstancesResponse(hosts));
         });
 
-        rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host1", msg -> {
+        rule.vertx().eventBus().consumer(Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host1", msg -> {
             Map<String, String> result = new HashMap<>();
             result.put("key1", "value1");
             msg.reply(new MultiValuedKeyValueQueryResponse(QueryStatus.OK, result));
         });
-        rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host2", msg -> {
+        rule.vertx().eventBus().consumer(Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host2", msg -> {
             Map<String, String> result = new HashMap<>();
             result.put("key2", "value2");
             msg.reply(new MultiValuedKeyValueQueryResponse(QueryStatus.OK, result));
         });
 
-        rule.vertx().deployVerticle(new AllKeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new RangeKeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
 
-            AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
+            RangeKeyValueQuery query = new RangeKeyValueQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName(), "key".getBytes(), "key".getBytes());
 
-            rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, query, context.asyncAssertSuccess(reply ->{
+            rule.vertx().eventBus().send(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, query, context.asyncAssertSuccess(reply ->{
 
                 context.assertTrue(reply.body() instanceof MultiValuedKeyValueQueryResponse);
                 MultiValuedKeyValueQueryResponse response = (MultiValuedKeyValueQueryResponse) reply.body();
@@ -123,20 +126,20 @@ public class AllKeyValueQueryFacadeVerticleTest {
             msg.reply(new AllInstancesResponse(hosts));
         });
 
-        rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host1", msg -> {
+        rule.vertx().eventBus().consumer(Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host1", msg -> {
             Map<String, String> result = new HashMap<>();
             result.put("key1", "value1");
             msg.reply(new MultiValuedKeyValueQueryResponse(QueryStatus.OK, result));
         });
-        rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host2", msg -> {
+        rule.vertx().eventBus().consumer(Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host2", msg -> {
            msg.fail(400, "msg");
         });
 
-        rule.vertx().deployVerticle(new AllKeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new RangeKeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
 
-            AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
+            RangeKeyValueQuery query = new RangeKeyValueQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName(), "key".getBytes(), "key".getBytes());
 
-            rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, query, context.asyncAssertFailure(handler ->{
+            rule.vertx().eventBus().send(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, query, context.asyncAssertFailure(handler ->{
 
                 context.assertTrue(handler instanceof ReplyException);
                 ReplyException ex = (ReplyException) handler;
@@ -158,11 +161,12 @@ public class AllKeyValueQueryFacadeVerticleTest {
         });
 
 
-        rule.vertx().deployVerticle(new AllKeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new RangeKeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
 
-            AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
+            RangeKeyValueQuery query = new RangeKeyValueQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName(), "key".getBytes(), "key".getBytes());
 
-            rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, query, context.asyncAssertFailure(handler ->{
+
+            rule.vertx().eventBus().send(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, query, context.asyncAssertFailure(handler ->{
 
                 context.assertTrue(handler instanceof ReplyException);
                 ReplyException ex = (ReplyException) handler;

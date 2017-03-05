@@ -22,6 +22,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.eventbus.ReplyException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,23 +55,29 @@ public class RangeKeyValueQueryFacadeVerticle extends AbstractVerticle{
 
 
 
-                    all.setHandler(handler -> {
+                    all.setHandler(compoundFutureHandler -> {
 
-                        if(handler.succeeded()) {
-                            List<Message<MultiValuedKeyValueQueryResponse>> list = handler.result().list();
+                        if(compoundFutureHandler.succeeded()) {
+                            List<Message<MultiValuedKeyValueQueryResponse>> list = compoundFutureHandler.result().list();
 
                             MultiValuedKeyValueQueryResponse compoundResult = list.stream().map(message -> message.body()).reduce(new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b));
                             msg.reply(compoundResult);
                         } else {
-                            handler.cause().printStackTrace();
-                            msg.fail(-1, reply.cause().getMessage());
+                            ReplyException cause = (ReplyException) compoundFutureHandler.cause();
+                            msg.fail(cause.failureCode(), cause.getMessage());
                         }
                     });
 
 
 
                 } else {
-                  msg.fail(-1, reply.cause().getMessage());
+                    if(reply.cause() instanceof ReplyException){
+                        ReplyException cause = (ReplyException) reply.cause();
+                        msg.fail(cause.failureCode(), cause.getMessage());
+                    }
+                    else {
+                        msg.fail(500, reply.cause().getMessage());
+                    }
 
                 }
 
