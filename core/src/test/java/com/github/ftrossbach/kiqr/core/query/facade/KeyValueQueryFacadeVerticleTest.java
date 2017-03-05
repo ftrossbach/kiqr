@@ -28,13 +28,9 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-
 import java.util.Optional;
 
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -56,7 +52,6 @@ public class KeyValueQueryFacadeVerticleTest {
 
     @Test
     public void success(TestContext context){
-        KafkaStreams streamMock = mock(KafkaStreams.class);
 
         rule.vertx().eventBus().consumer(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, msg -> {
             msg.reply(new InstanceResolverResponse(QueryStatus.OK, Optional.of("host")));
@@ -86,7 +81,7 @@ public class KeyValueQueryFacadeVerticleTest {
 
     @Test
     public void forwardingFailureDuringQuery(TestContext context){
-        KafkaStreams streamMock = mock(KafkaStreams.class);
+
 
         rule.vertx().eventBus().consumer(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, msg -> {
             msg.reply(new InstanceResolverResponse(QueryStatus.OK, Optional.of("host")));
@@ -114,7 +109,6 @@ public class KeyValueQueryFacadeVerticleTest {
 
     @Test
     public void forwardingFailureDuringInstanceLookup(TestContext context){
-        KafkaStreams streamMock = mock(KafkaStreams.class);
 
         rule.vertx().eventBus().consumer(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, msg -> {
             msg.fail(500, "msg");

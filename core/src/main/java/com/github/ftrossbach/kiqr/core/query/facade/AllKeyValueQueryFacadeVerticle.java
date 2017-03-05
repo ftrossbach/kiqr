@@ -19,12 +19,11 @@ import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.AllInstancesResponse;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.AllKeyValuesQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.MultiValuedKeyValueQueryResponse;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.RangeKeyValueQuery;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.Message;
-
+import io.vertx.core.eventbus.ReplyException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,21 +51,29 @@ public class AllKeyValueQueryFacadeVerticle extends AbstractVerticle{
 
                     CompositeFuture all = CompositeFuture.all(results);
 
-                    all.setHandler(handler -> {
+                    all.setHandler(compoundFutureHandler -> {
 
-                        if(handler.succeeded()) {
-                            List<Message<MultiValuedKeyValueQueryResponse>> list = handler.result().list();
+                        if(compoundFutureHandler.succeeded()) {
+                            List<Message<MultiValuedKeyValueQueryResponse>> list = compoundFutureHandler.result().list();
 
                             MultiValuedKeyValueQueryResponse compoundResult = list.stream().map(message -> message.body()).reduce(new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b));
                             msg.reply(compoundResult);
                         } else {
-                            handler.cause().printStackTrace();
-                            msg.fail(-1, reply.cause().getMessage());
+                            compoundFutureHandler.cause().printStackTrace();
+                            ReplyException cause = (ReplyException) compoundFutureHandler.cause();
+                            msg.fail(cause.failureCode(), cause.getMessage());
                         }
                     });
 
                 } else {
-                  msg.fail(-1, reply.cause().getMessage());
+                    if(reply.cause() instanceof ReplyException){
+                        ReplyException cause = (ReplyException) reply.cause();
+                        msg.fail(cause.failureCode(), cause.getMessage());
+                    }
+                    else {
+                        msg.fail(500, reply.cause().getMessage());
+                    }
+
                 }
 
             });
