@@ -150,11 +150,7 @@ public class RuntimeVerticle extends AbstractVerticle {
 
             //starting streams can take a while, therefore we do it asynchronously
             props.put(StreamsConfig.APPLICATION_SERVER_CONFIG, instanceId + ":124");
-            System.out.println(System.currentTimeMillis());
-            KafkaStreams streams = new KafkaStreams(builder, props);
-
-            System.out.println(System.currentTimeMillis());
-            streams.start();
+            KafkaStreams streams = createAndStartStream();
             future.complete(streams);
 
         }, res -> {
@@ -190,6 +186,12 @@ public class RuntimeVerticle extends AbstractVerticle {
         });
 
 
+    }
+
+    protected  KafkaStreams createAndStartStream(){
+        KafkaStreams streams = new KafkaStreams(builder, props);
+        streams.start();
+        return streams;
     }
 
     private Future deployVerticles(AbstractVerticle... verticles) {
