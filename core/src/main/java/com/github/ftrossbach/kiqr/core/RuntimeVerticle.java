@@ -53,7 +53,7 @@ public class RuntimeVerticle extends AbstractVerticle {
 
         private final KStreamBuilder builder;
         private final Properties properties;
-        private Optional<HttpServerOptions> httpServerOptions;
+        private Optional<HttpServerOptions> httpServerOptions = Optional.empty();
 
         public Builder(KStreamBuilder builder) {
             this.builder = builder;
@@ -76,12 +76,12 @@ public class RuntimeVerticle extends AbstractVerticle {
         }
 
         public Builder withBuffering(Integer buffer) {
-            properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, buffer.toString());
+            properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, buffer);
             return this;
         }
 
         public Builder withoutBuffering() {
-            properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, "0");
+            properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
             return this;
         }
 
@@ -90,7 +90,7 @@ public class RuntimeVerticle extends AbstractVerticle {
             return this;
         }
 
-        public Builder withKeySerde(Class<? extends Serde<?>> serdeClass) {
+        public Builder withKeySerde(Class<? extends Serde> serdeClass) {
             properties.put(StreamsConfig.KEY_SERDE_CLASS_CONFIG, serdeClass.getName());
             return this;
         }
@@ -100,7 +100,7 @@ public class RuntimeVerticle extends AbstractVerticle {
             return this;
         }
 
-        public Builder withValueSerde(Class<? extends Serde<?>> serdeClass) {
+        public Builder withValueSerde(Class<? extends Serde> serdeClass) {
             properties.put(StreamsConfig.VALUE_SERDE_CLASS_CONFIG, serdeClass.getName());
             return this;
         }
@@ -127,8 +127,8 @@ public class RuntimeVerticle extends AbstractVerticle {
     }
 
     private final KStreamBuilder builder;
-    private final Properties props;
-    private final Optional<HttpServerOptions> serverOptions;
+    protected final Properties props;
+    protected final Optional<HttpServerOptions> serverOptions;
 
     protected RuntimeVerticle(KStreamBuilder builder, Properties props) {
         this(builder, props, null);
