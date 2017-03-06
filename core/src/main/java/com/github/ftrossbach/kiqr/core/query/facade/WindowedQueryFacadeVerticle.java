@@ -18,6 +18,7 @@ package com.github.ftrossbach.kiqr.core.query.facade;
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.eventbus.ReplyException;
 
 /**
  * Created by ftr on 22/02/2017.
@@ -36,8 +37,12 @@ public class WindowedQueryFacadeVerticle extends AbstractVerticle{
                     vertx.eventBus().send(Config.WINDOWED_QUERY_ADDRESS_PREFIX + response.getInstanceId().get(), query, rep -> {
 
                         if(rep.failed()){
-                            rep.cause().printStackTrace();
-                            msg.fail(-1, rep.cause().getMessage());
+                            if(rep.cause() instanceof ReplyException){
+                                ReplyException cause = (ReplyException) rep.cause();
+                                msg.fail(cause.failureCode(), cause.getMessage());
+                            } else {
+                                msg.fail(500, rep.cause().getMessage());
+                            }
                         }
                         else {
                             WindowedQueryResponse queryResponse = (WindowedQueryResponse) rep.result().body();
@@ -47,7 +52,12 @@ public class WindowedQueryFacadeVerticle extends AbstractVerticle{
 
                     });
                 } else {
-                  msg.fail(-1, reply.cause().getMessage());
+                    if(reply.cause() instanceof ReplyException){
+                        ReplyException cause = (ReplyException) reply.cause();
+                        msg.fail(cause.failureCode(), cause.getMessage());
+                    } else {
+                        msg.fail(500, reply.cause().getMessage());
+                    }
                 }
 
             });

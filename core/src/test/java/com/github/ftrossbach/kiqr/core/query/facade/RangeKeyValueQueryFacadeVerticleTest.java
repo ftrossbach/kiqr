@@ -28,7 +28,7 @@ public class RangeKeyValueQueryFacadeVerticleTest {
 
     @Before
     public void setUp(){
-        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverResponse.class, new KiqrCodec(InstanceResolverResponse.class));
+        rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
         rule.vertx().eventBus().registerDefaultCodec(RangeKeyValueQuery.class, new KiqrCodec(RangeKeyValueQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(MultiValuedKeyValueQueryResponse.class, new KiqrCodec(MultiValuedKeyValueQueryResponse.class));
 
@@ -157,7 +157,7 @@ public class RangeKeyValueQueryFacadeVerticleTest {
 
 
         rule.vertx().eventBus().consumer(Config.ALL_INSTANCES, msg -> {
-            msg.fail(400, "msg");
+            msg.fail(500, "msg");
         });
 
 
@@ -170,7 +170,7 @@ public class RangeKeyValueQueryFacadeVerticleTest {
 
                 context.assertTrue(handler instanceof ReplyException);
                 ReplyException ex = (ReplyException) handler;
-                context.assertEquals(400, ex.failureCode());
+                context.assertEquals(500, ex.failureCode());
 
             }));
 
