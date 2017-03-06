@@ -57,7 +57,7 @@ public class KeyValueQueryVerticle extends AbstractQueryVerticle {
                 if (result != null) {
                     msg.reply(new ScalarKeyValueQueryResponse(QueryStatus.OK, base64Encode(valueSerde, result)));
                 } else {
-                    msg.reply(new ScalarKeyValueQueryResponse(QueryStatus.NOT_FOUND, null));
+                    msg.fail(404, "No value found");
                 }
             }  catch (SerdeNotFoundException e) {
                 msg.fail(400, e.getMessage());

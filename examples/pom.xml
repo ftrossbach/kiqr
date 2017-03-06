@@ -41,6 +41,10 @@
             <artifactId>kiqr-rest-client</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.github.ftrossbach</groupId>
+            <artifactId>kiqr-rest-server</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-core</artifactId>
         </dependency>

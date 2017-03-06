@@ -102,11 +102,12 @@ public class KeyValueQueryVerticleTest {
 
             ScalarKeyValueQuery query = new ScalarKeyValueQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
-            rule.vertx().eventBus().send(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertSuccess(reply ->{
+            rule.vertx().eventBus().send(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertFailure(handler ->{
 
-                context.assertTrue(reply.body() instanceof ScalarKeyValueQueryResponse);
-                ScalarKeyValueQueryResponse response = (ScalarKeyValueQueryResponse) reply.body();
-                context.assertEquals(QueryStatus.NOT_FOUND, response.getStatus());
+                context.assertTrue(handler instanceof ReplyException);
+
+                ReplyException exception = (ReplyException) handler;
+                context.assertEquals(404, exception.failureCode());
 
             }));
 

@@ -27,7 +27,6 @@ import com.github.ftrossbach.kiqr.core.query.kv.AllKeyValuesQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.kv.KeyValueQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.kv.RangeKeyValueQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.windowed.WindowedQueryVerticle;
-import com.github.ftrossbach.kiqr.rest.server.HttpServer;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
@@ -53,7 +52,6 @@ public class RuntimeVerticle extends AbstractVerticle {
 
         private final KStreamBuilder builder;
         private final Properties properties;
-        private Optional<HttpServerOptions> httpServerOptions = Optional.empty();
 
         public Builder(KStreamBuilder builder) {
             this.builder = builder;
@@ -105,22 +103,12 @@ public class RuntimeVerticle extends AbstractVerticle {
             return this;
         }
 
-        public Builder withHttpServer(HttpServerOptions options) {
-            this.httpServerOptions = Optional.ofNullable(options);
-            return this;
-        }
-
-        public Builder withHttpServer(int port) {
-            this.httpServerOptions = Optional.ofNullable(new HttpServerOptions().setPort(port));
-            return this;
-        }
 
 
-        public RuntimeVerticle build() {
 
-            return httpServerOptions
-                    .map(options -> new RuntimeVerticle(builder, properties, options))
-                    .orElseGet(() -> new RuntimeVerticle(builder, properties));
+        public AbstractVerticle build() {
+
+            return new RuntimeVerticle(builder, properties);
         }
 
 
@@ -128,17 +116,14 @@ public class RuntimeVerticle extends AbstractVerticle {
 
     private final KStreamBuilder builder;
     protected final Properties props;
-    protected final Optional<HttpServerOptions> serverOptions;
+
 
     protected RuntimeVerticle(KStreamBuilder builder, Properties props) {
-        this(builder, props, null);
-    }
-
-    protected RuntimeVerticle(KStreamBuilder builder, Properties props, HttpServerOptions serverOptions) {
         this.builder = builder;
         this.props = props;
-        this.serverOptions = Optional.ofNullable(serverOptions);
     }
+
+
 
 
     @Override
@@ -162,10 +147,6 @@ public class RuntimeVerticle extends AbstractVerticle {
                         new WindowedQueryVerticle(instanceId, res.result()), new AllKeyValueQueryFacadeVerticle(),
                         new KeyValueQueryFacadeVerticle(), new RangeKeyValueQueryFacadeVerticle(), new WindowedQueryFacadeVerticle());
 
-
-                if (serverOptions.isPresent()) {
-                    deployFuture = CompositeFuture.all(deployFuture, deployVerticles(new HttpServer(serverOptions.get())));
-                }
 
 
                 deployFuture.setHandler(handler -> {

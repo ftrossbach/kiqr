@@ -45,23 +45,6 @@ public class RuntimeVerticleTest {
 
     }
 
-    @Test
-    public void successfulStartIncludingServer(TestContext context){
-
-        KafkaStreams streamsMock = mock(KafkaStreams.class);
-        KStreamBuilder builderMock = mock(KStreamBuilder.class);
-        Properties props = new Properties();
-        RuntimeVerticle verticleSpy = spy(new RuntimeVerticle(builderMock, props, new HttpServerOptions().setPort(29010)));
-
-        doReturn(streamsMock).when(verticleSpy).createAndStartStream();
-
-        rule.vertx().deployVerticle(verticleSpy, context.asyncAssertSuccess(handler -> {
-
-
-            context.assertTrue(rule.vertx().deploymentIDs().size() > 0);
-        }));
-
-    }
 
     @Test
     public void builderApplicationId(){
@@ -69,7 +52,7 @@ public class RuntimeVerticleTest {
         RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
 
         builder.withApplicationId("test");
-        RuntimeVerticle verticle = builder.build();
+        RuntimeVerticle verticle = (RuntimeVerticle) builder.build();
 
         assertThat(verticle.props, hasKey(StreamsConfig.APPLICATION_ID_CONFIG));
         assertThat(verticle.props.get(StreamsConfig.APPLICATION_ID_CONFIG), is(equalTo("test")));
@@ -82,7 +65,7 @@ public class RuntimeVerticleTest {
         RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
 
         builder.withBootstrapServers("localhost:123");
-        RuntimeVerticle verticle = builder.build();
+        RuntimeVerticle verticle = (RuntimeVerticle) builder.build();
 
         assertThat(verticle.props, hasKey(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG));
         assertThat(verticle.props.get(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG), is(equalTo("localhost:123")));
@@ -95,7 +78,7 @@ public class RuntimeVerticleTest {
         RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
 
         builder.withBuffering(42);
-        RuntimeVerticle verticle = builder.build();
+        RuntimeVerticle verticle = (RuntimeVerticle) builder.build();
 
         assertThat(verticle.props, hasKey(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG));
         assertThat(verticle.props.get(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG), is(equalTo(42)));
@@ -108,7 +91,7 @@ public class RuntimeVerticleTest {
         RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
 
         builder.withoutBuffering();
-        RuntimeVerticle verticle = builder.build();
+        RuntimeVerticle verticle = (RuntimeVerticle) builder.build();
 
         assertThat(verticle.props, hasKey(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG));
         assertThat(verticle.props.get(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG), is(equalTo(0)));
@@ -121,7 +104,7 @@ public class RuntimeVerticleTest {
         RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
 
         builder.withKeySerde(Serdes.String());
-        RuntimeVerticle verticle = builder.build();
+        RuntimeVerticle verticle = (RuntimeVerticle) builder.build();
 
         assertThat(verticle.props, hasKey(StreamsConfig.KEY_SERDE_CLASS_CONFIG));
         assertThat(verticle.props.get(StreamsConfig.KEY_SERDE_CLASS_CONFIG), is(equalTo(Serdes.String().getClass().getName())));
@@ -134,7 +117,7 @@ public class RuntimeVerticleTest {
         RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
 
         builder.withKeySerde(Serdes.String().getClass());
-        RuntimeVerticle verticle = builder.build();
+        RuntimeVerticle verticle = (RuntimeVerticle) builder.build();
 
         assertThat(verticle.props, hasKey(StreamsConfig.KEY_SERDE_CLASS_CONFIG));
         assertThat(verticle.props.get(StreamsConfig.KEY_SERDE_CLASS_CONFIG), is(equalTo(Serdes.String().getClass().getName())));
@@ -147,7 +130,7 @@ public class RuntimeVerticleTest {
         RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
 
         builder.withValueSerde(Serdes.String());
-        RuntimeVerticle verticle = builder.build();
+        RuntimeVerticle verticle = (RuntimeVerticle) builder.build();
 
         assertThat(verticle.props, hasKey(StreamsConfig.VALUE_SERDE_CLASS_CONFIG));
         assertThat(verticle.props.get(StreamsConfig.VALUE_SERDE_CLASS_CONFIG), is(equalTo(Serdes.String().getClass().getName())));
@@ -160,48 +143,12 @@ public class RuntimeVerticleTest {
         RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
 
         builder.withValueSerde(Serdes.String().getClass());
-        RuntimeVerticle verticle = builder.build();
+        RuntimeVerticle verticle = (RuntimeVerticle) builder.build();
 
         assertThat(verticle.props, hasKey(StreamsConfig.VALUE_SERDE_CLASS_CONFIG));
         assertThat(verticle.props.get(StreamsConfig.VALUE_SERDE_CLASS_CONFIG), is(equalTo(Serdes.String().getClass().getName())));
 
     }
 
-    @Test
-    public void builderWithoutHttpServerOptions(){
 
-        RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
-
-        RuntimeVerticle verticle = builder.build();
-
-        assertFalse(verticle.serverOptions.isPresent());
-
-    }
-
-    @Test
-    public void builderWithHttpServerOptions(){
-
-        RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
-
-        builder.withHttpServer(new HttpServerOptions().setPort(1234));
-        RuntimeVerticle verticle = builder.build();
-
-        assertTrue(verticle.serverOptions.isPresent());
-        assertThat(verticle.serverOptions.get().getPort(), is(equalTo(1234)));
-
-    }
-
-    @Test
-    public void builderWithPort(){
-
-        RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
-
-        builder.withHttpServer(4567);
-        RuntimeVerticle verticle = builder.build();
-
-        assertTrue(verticle.serverOptions.isPresent());
-        assertThat(verticle.serverOptions.get().getPort(), is(equalTo(4567)));
-
-
-    }
 }

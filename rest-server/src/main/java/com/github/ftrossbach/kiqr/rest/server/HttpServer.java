@@ -17,15 +17,20 @@ package com.github.ftrossbach.kiqr.rest.server;
 
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
+import com.github.ftrossbach.kiqr.core.RuntimeVerticle;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
+import org.apache.kafka.streams.kstream.KStreamBuilder;
 
 import java.util.Base64;
+import java.util.Properties;
 
 /**
  * Created by ftr on 28/02/2017.
@@ -35,14 +40,50 @@ public class HttpServer extends AbstractVerticle {
     static String BASE_ROUTE_KV = "/api/v1/kv/:store";
     static String BASE_ROUTE_WINDOW = "/api/v1/window/:store";
 
-    private final HttpServerOptions serverOptions;
+    public static class Builder extends RuntimeVerticle.Builder{
 
-    public HttpServer(HttpServerOptions serverOptions) {
+
+        private HttpServerOptions httpServerOptions;
+
+        public Builder(KStreamBuilder builder) {
+            super(builder);
+        }
+
+        public Builder(KStreamBuilder builder, Properties properties) {
+            super(builder, properties);
+        }
+
+        public Builder withHttpServer(HttpServerOptions options) {
+            this.httpServerOptions = options;
+            return this;
+        }
+
+        public Builder withHttpServer(int port) {
+            this.httpServerOptions = new HttpServerOptions().setPort(port);
+            return this;
+        }
+
+        @Override
+        public AbstractVerticle build() {
+            AbstractVerticle runtimeVerticle = super.build();
+            return new HttpServer(httpServerOptions, runtimeVerticle);
+        }
+    }
+
+    private final HttpServerOptions serverOptions;
+    private final AbstractVerticle runtimeVerticle;
+
+    protected HttpServer(HttpServerOptions serverOptions, AbstractVerticle runtimeVerticle) {
         this.serverOptions = serverOptions;
+        this.runtimeVerticle = runtimeVerticle;
     }
 
     @Override
     public void start(Future<Void> fut) throws Exception {
+
+        Future runtimeVerticleCompleter = Future.future();
+        vertx.deployVerticle(runtimeVerticle, runtimeVerticleCompleter.completer());
+
         // Create a router object.
         Router router = Router.router(vertx);
 
@@ -51,21 +92,21 @@ public class HttpServer extends AbstractVerticle {
 
         addRouteForWindowQueries(router);
 
+        Future serverListener = Future.future();
 
         vertx
                 .createHttpServer(serverOptions)
                 .requestHandler(router::accept)
-                .listen(
-                        result -> {
-                            if (result.succeeded()) {
-                                fut.complete();
-                            } else {
-                                fut.fail(result.cause());
-                            }
-                        }
-                );
+                .listen(serverListener.completer());
 
 
+        CompositeFuture.all(runtimeVerticleCompleter, serverListener).setHandler(handler ->{
+           if(handler.succeeded()){
+               fut.complete();
+           } else {
+               fut.fail(handler.cause());
+           }
+        });
     }
 
     private void addRouteForWindowQueries(Router router) {
@@ -118,11 +159,10 @@ public class HttpServer extends AbstractVerticle {
             String keySerde = request.getParam("keySerde");
             String valueSerde = request.getParam("valueSerde");
             String store = request.getParam("store");
-            System.out.println(request.absoluteURI());
             byte[] key = Base64.getDecoder().decode(request.getParam("key"));
 
             if(keySerde == null || valueSerde == null){
-                routingContext.fail(404);
+                routingContext.fail(400);
             }
 
             ScalarKeyValueQuery query = new ScalarKeyValueQuery(store, keySerde, key, valueSerde);
@@ -139,8 +179,9 @@ public class HttpServer extends AbstractVerticle {
 
                 } else {
 
+                    ReplyException ex = (ReplyException) reply.cause();
                     HttpServerResponse response = routingContext.response();
-                    response.setStatusCode(404);
+                    response.setStatusCode(ex.failureCode());
                     response.end();
                 }
             });
