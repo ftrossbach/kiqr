@@ -17,7 +17,6 @@ package com.github.ftrossbach.kiqr.core.query.windowed;
 
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
-import com.github.ftrossbach.kiqr.core.query.AbstractKiqrVerticle;
 import com.github.ftrossbach.kiqr.core.query.AbstractQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.exceptions.SerdeNotFoundException;
 import org.apache.kafka.common.serialization.Serde;
@@ -59,9 +58,9 @@ public class WindowedQueryVerticle extends AbstractQueryVerticle {
                             KeyValue<Long, Object> windowedEntry = result.next();
                             results.put(windowedEntry.key, base64Encode(valueSerde, windowedEntry.value));
                         }
-                        msg.reply(new WindowedQueryResponse(QueryStatus.OK, results));
+                        msg.reply(new WindowedQueryResponse(results));
                     } else {
-                        msg.reply(new WindowedQueryResponse(QueryStatus.NOT_FOUND, Collections.emptySortedMap()));
+                        msg.reply(new WindowedQueryResponse(Collections.emptySortedMap()));
                     }
                 }
             } catch (SerdeNotFoundException e) {

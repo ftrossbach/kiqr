@@ -76,7 +76,6 @@ public class KeyValueQueryVerticleTest {
 
                 context.assertTrue(reply.body() instanceof ScalarKeyValueQueryResponse);
                 ScalarKeyValueQueryResponse response = (ScalarKeyValueQueryResponse) reply.body();
-                context.assertEquals(QueryStatus.OK, response.getStatus());
                 context.assertEquals("dmFsdWU=", response.getValue());
 
             }));

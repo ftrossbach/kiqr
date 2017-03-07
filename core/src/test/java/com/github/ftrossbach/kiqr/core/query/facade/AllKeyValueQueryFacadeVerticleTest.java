@@ -1,3 +1,18 @@
+/**
+ * Copyright © 2017 Florian Troßbach (trossbach@gmail.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.github.ftrossbach.kiqr.core.query.facade;
 
 import com.github.ftrossbach.kiqr.commons.config.Config;
@@ -44,7 +59,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
         rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host1", msg -> {
             Map<String, String> result = new HashMap<>();
             result.put("key1", "value1");
-            msg.reply(new MultiValuedKeyValueQueryResponse(QueryStatus.OK, result));
+            msg.reply(new MultiValuedKeyValueQueryResponse(result));
         });
 
 
@@ -56,7 +71,6 @@ public class AllKeyValueQueryFacadeVerticleTest {
 
                 context.assertTrue(reply.body() instanceof MultiValuedKeyValueQueryResponse);
                 MultiValuedKeyValueQueryResponse response = (MultiValuedKeyValueQueryResponse) reply.body();
-                context.assertEquals(QueryStatus.OK, response.getStatus());
                 context.assertEquals(1, response.getResults().size());
                 context.assertTrue(response.getResults().containsKey("key1"));
                 context.assertEquals("value1", response.getResults().get("key1"));
@@ -82,12 +96,12 @@ public class AllKeyValueQueryFacadeVerticleTest {
         rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host1", msg -> {
             Map<String, String> result = new HashMap<>();
             result.put("key1", "value1");
-            msg.reply(new MultiValuedKeyValueQueryResponse(QueryStatus.OK, result));
+            msg.reply(new MultiValuedKeyValueQueryResponse(result));
         });
         rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host2", msg -> {
             Map<String, String> result = new HashMap<>();
             result.put("key2", "value2");
-            msg.reply(new MultiValuedKeyValueQueryResponse(QueryStatus.OK, result));
+            msg.reply(new MultiValuedKeyValueQueryResponse(result));
         });
 
         rule.vertx().deployVerticle(new AllKeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
@@ -98,7 +112,6 @@ public class AllKeyValueQueryFacadeVerticleTest {
 
                 context.assertTrue(reply.body() instanceof MultiValuedKeyValueQueryResponse);
                 MultiValuedKeyValueQueryResponse response = (MultiValuedKeyValueQueryResponse) reply.body();
-                context.assertEquals(QueryStatus.OK, response.getStatus());
                 context.assertEquals(2, response.getResults().size());
                 context.assertTrue(response.getResults().containsKey("key1"));
                 context.assertEquals("value1", response.getResults().get("key1"));
@@ -126,7 +139,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
         rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host1", msg -> {
             Map<String, String> result = new HashMap<>();
             result.put("key1", "value1");
-            msg.reply(new MultiValuedKeyValueQueryResponse(QueryStatus.OK, result));
+            msg.reply(new MultiValuedKeyValueQueryResponse(result));
         });
         rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host2", msg -> {
            msg.fail(400, "msg");

@@ -16,7 +16,6 @@
 package com.github.ftrossbach.kiqr.core.query.windowed;
 
 import com.github.ftrossbach.kiqr.commons.config.Config;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.QueryStatus;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.WindowedQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.WindowedQueryResponse;
 import com.github.ftrossbach.kiqr.core.query.KiqrCodec;
@@ -38,9 +37,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -80,7 +77,6 @@ public class WindowQueryVerticleTest {
 
                 context.assertTrue(reply.body() instanceof WindowedQueryResponse);
                 WindowedQueryResponse response = (WindowedQueryResponse) reply.body();
-                context.assertEquals(QueryStatus.OK, response.getStatus());
                 context.assertEquals(1, response.getValues().size());
                 context.assertTrue(response.getValues().containsKey(1L));
                 context.assertEquals("dmFsdWU=", response.getValues().get(1L));//"value" as UT8/b64
@@ -113,7 +109,6 @@ public class WindowQueryVerticleTest {
 
                 context.assertTrue(reply.body() instanceof WindowedQueryResponse);
                 WindowedQueryResponse response = (WindowedQueryResponse) reply.body();
-                context.assertEquals(QueryStatus.OK, response.getStatus());
                 context.assertEquals(2, response.getValues().size());
                 context.assertTrue(response.getValues().containsKey(1L));
                 context.assertEquals("dmFsdWU=", response.getValues().get(1L));//"value" as UT8/b64
@@ -148,7 +143,6 @@ public class WindowQueryVerticleTest {
 
                 context.assertTrue(reply.body() instanceof WindowedQueryResponse);
                 WindowedQueryResponse response = (WindowedQueryResponse) reply.body();
-                context.assertEquals(QueryStatus.NOT_FOUND, response.getStatus());
                 context.assertEquals(0, response.getValues().size());
                 context.assertTrue(iterator.closed);
 

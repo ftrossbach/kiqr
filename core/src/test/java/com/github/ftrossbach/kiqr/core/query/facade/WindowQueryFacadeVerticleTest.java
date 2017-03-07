@@ -1,3 +1,18 @@
+/**
+ * Copyright © 2017 Florian Troßbach (trossbach@gmail.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.github.ftrossbach.kiqr.core.query.facade;
 
 import com.github.ftrossbach.kiqr.commons.config.Config;
@@ -39,7 +54,7 @@ public class WindowQueryFacadeVerticleTest {
     public void success(TestContext context){
 
         rule.vertx().eventBus().consumer(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, msg -> {
-            msg.reply(new InstanceResolverResponse(QueryStatus.OK, Optional.of("host")));
+            msg.reply(new InstanceResolverResponse(Optional.of("host")));
         });
 
         rule.vertx().eventBus().consumer(Config.WINDOWED_QUERY_ADDRESS_PREFIX + "host", msg -> {
@@ -47,7 +62,7 @@ public class WindowQueryFacadeVerticleTest {
 
             result.put(1L, "abc");
             result.put(2L, "def");
-            msg.reply(new WindowedQueryResponse(QueryStatus.OK, result ));
+            msg.reply(new WindowedQueryResponse(result ));
         });
 
         rule.vertx().deployVerticle(new WindowedQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
@@ -58,7 +73,6 @@ public class WindowQueryFacadeVerticleTest {
 
                 context.assertTrue(reply.body() instanceof WindowedQueryResponse);
                 WindowedQueryResponse response = (WindowedQueryResponse) reply.body();
-                context.assertEquals(QueryStatus.OK, response.getStatus());
                 context.assertEquals(2, response.getValues().size());
                 context.assertTrue(response.getValues().containsKey(1L));
                 context.assertEquals("abc", response.getValues().get(1L));
@@ -77,7 +91,7 @@ public class WindowQueryFacadeVerticleTest {
 
 
         rule.vertx().eventBus().consumer(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, msg -> {
-            msg.reply(new InstanceResolverResponse(QueryStatus.OK, Optional.of("host")));
+            msg.reply(new InstanceResolverResponse(Optional.of("host")));
         });
 
         rule.vertx().eventBus().consumer(Config.WINDOWED_QUERY_ADDRESS_PREFIX + "host", msg -> {

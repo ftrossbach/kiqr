@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * Created by ftr on 20/02/2017.
  */
-public class MultiValuedKeyValueQueryResponse extends AbstractQueryResponse{
+public class MultiValuedKeyValueQueryResponse{
 
 
     private Map<String,String> results = new HashMap<>();
@@ -31,8 +31,7 @@ public class MultiValuedKeyValueQueryResponse extends AbstractQueryResponse{
     public MultiValuedKeyValueQueryResponse() {
     }
 
-    public MultiValuedKeyValueQueryResponse(QueryStatus status, Map<String,String> results) {
-        super(status);
+    public MultiValuedKeyValueQueryResponse(Map<String, String> results) {
         this.results = results;
     }
 
@@ -50,6 +49,6 @@ public class MultiValuedKeyValueQueryResponse extends AbstractQueryResponse{
         Map<String, String> right = new HashMap<>(other.results);
         left.putAll(right);
 
-        return new MultiValuedKeyValueQueryResponse(QueryStatus.OK, left);
+        return new MultiValuedKeyValueQueryResponse(left);
     }
 }

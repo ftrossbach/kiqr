@@ -19,14 +19,17 @@ import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
 import com.github.ftrossbach.kiqr.core.RuntimeVerticle;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
 
 import java.util.Base64;
@@ -125,28 +128,27 @@ public class HttpServer extends AbstractVerticle {
             if (keySerde == null || valueSerde == null) {
                 routingContext.fail(404);
             }
-
-
-
-            if (from == null && to == null) {
+            else if (from == null && to == null) {
                 routingContext.fail(404);
+            } else {
+                WindowedQuery query = new WindowedQuery(store, keySerde, key,valueSerde, Long.valueOf(from), Long.valueOf(to));
+
+
+
+                vertx.eventBus().send(Config.WINDOWED_QUERY_FACADE_ADDRESS, query, reply -> {
+                    if (reply.succeeded()) {
+                        WindowedQueryResponse body = (WindowedQueryResponse) reply.result().body();
+
+                        HttpServerResponse response = routingContext.response();
+                        response
+                                .putHeader("content-type", "application/json")
+                                .end(Json.encode(body));
+
+
+                    }
+                });
             }
-            WindowedQuery query = new WindowedQuery(store, keySerde, key,valueSerde, Long.valueOf(from), Long.valueOf(to));
 
-
-
-            vertx.eventBus().send(Config.WINDOWED_QUERY_FACADE_ADDRESS, query, reply -> {
-                if (reply.succeeded()) {
-                    WindowedQueryResponse body = (WindowedQueryResponse) reply.result().body();
-
-                    HttpServerResponse response = routingContext.response();
-                    response
-                            .putHeader("content-type", "application/json")
-                            .end(Json.encode(body));
-
-
-                }
-            });
         });
     }
 
@@ -163,31 +165,35 @@ public class HttpServer extends AbstractVerticle {
 
             if(keySerde == null || valueSerde == null){
                 routingContext.fail(400);
+            } else {
+                ScalarKeyValueQuery query = new ScalarKeyValueQuery(store, keySerde, key, valueSerde);
+
+
+                vertx.eventBus().send(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, query, reply -> {
+                    if(reply.succeeded()){
+                        ScalarKeyValueQueryResponse body = (ScalarKeyValueQueryResponse) reply.result().body();
+                        HttpServerResponse response = routingContext.response();
+                        response
+                                .putHeader("content-type", "application/json")
+                                .end(Json.encode(body));
+
+
+                    } else {
+
+                        forwardErrorCode(routingContext, reply);
+                    }
+                });
             }
-
-            ScalarKeyValueQuery query = new ScalarKeyValueQuery(store, keySerde, key, valueSerde);
-
-
-            vertx.eventBus().send(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, query, reply -> {
-                if(reply.succeeded()){
-                    ScalarKeyValueQueryResponse body = (ScalarKeyValueQueryResponse) reply.result().body();
-                    HttpServerResponse response = routingContext.response();
-                    response
-                            .putHeader("content-type", "application/json")
-                            .end(Json.encode(body));
-
-
-                } else {
-
-                    ReplyException ex = (ReplyException) reply.cause();
-                    HttpServerResponse response = routingContext.response();
-                    response.setStatusCode(ex.failureCode());
-                    response.end();
-                }
-            });
 
 
         });
+    }
+
+    private void forwardErrorCode(RoutingContext routingContext, AsyncResult<Message<Object>> reply) {
+        ReplyException ex = (ReplyException) reply.cause();
+        HttpServerResponse response = routingContext.response();
+        response.setStatusCode(ex.failureCode());
+        response.end();
     }
 
     private void addRouteForMultiValuedKVQueries(Router router) {
@@ -203,39 +209,41 @@ public class HttpServer extends AbstractVerticle {
             String to = request.getParam("to");
 
             if (keySerde == null || valueSerde == null) {
-                routingContext.fail(404);
-            }
-
-            Object query;
-            String address;
-
-            if (from == null && to == null) {
-
-                query = new AllKeyValuesQuery(store, keySerde, valueSerde);
-                address = Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS;
+                routingContext.fail(400);
             } else {
-                byte[] fromArray = Base64.getDecoder().decode(from);
-                byte[] toArray = Base64.getDecoder().decode(to);
+                Object query;
+                String address;
 
-                query = new RangeKeyValueQuery(store, keySerde, valueSerde, fromArray, toArray);
-                address = Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS;
+                if (from == null && to == null) {
 
-            }
-
-            vertx.eventBus().send(address, query, reply -> {
-                if (reply.succeeded()) {
-                    MultiValuedKeyValueQueryResponse body = (MultiValuedKeyValueQueryResponse) reply.result().body();
-
-                    HttpServerResponse response = routingContext.response();
-                    response
-                            .putHeader("content-type", "application/json")
-                            .end(Json.encode(body));
-
-
+                    query = new AllKeyValuesQuery(store, keySerde, valueSerde);
+                    address = Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS;
                 } else {
+                    byte[] fromArray = Base64.getDecoder().decode(from);
+                    byte[] toArray = Base64.getDecoder().decode(to);
+
+                    query = new RangeKeyValueQuery(store, keySerde, valueSerde, fromArray, toArray);
+                    address = Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS;
 
                 }
-            });
+
+                vertx.eventBus().send(address, query, reply -> {
+                    if (reply.succeeded()) {
+                        MultiValuedKeyValueQueryResponse body = (MultiValuedKeyValueQueryResponse) reply.result().body();
+
+                        HttpServerResponse response = routingContext.response();
+                        response
+                                .putHeader("content-type", "application/json")
+                                .end(Json.encode(body));
+
+
+                    } else {
+                        forwardErrorCode(routingContext, reply);
+                    }
+                });
+            }
+
+
         });
     }
 

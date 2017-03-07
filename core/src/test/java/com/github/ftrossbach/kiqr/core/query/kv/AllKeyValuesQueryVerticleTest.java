@@ -81,7 +81,6 @@ public class AllKeyValuesQueryVerticleTest {
 
                 context.assertTrue(reply.body() instanceof MultiValuedKeyValueQueryResponse);
                 MultiValuedKeyValueQueryResponse response = (MultiValuedKeyValueQueryResponse) reply.body();
-                context.assertEquals(QueryStatus.OK, response.getStatus());
                 context.assertEquals(1, response.getResults().size());
                 context.assertTrue(response.getResults().containsKey("a2V5"));//"key" as UT8/b64
                 context.assertEquals("dmFsdWU=", response.getResults().get("a2V5"));//"value" as UT8/b64
@@ -114,7 +113,6 @@ public class AllKeyValuesQueryVerticleTest {
 
                 context.assertTrue(reply.body() instanceof MultiValuedKeyValueQueryResponse);
                 MultiValuedKeyValueQueryResponse response = (MultiValuedKeyValueQueryResponse) reply.body();
-                context.assertEquals(QueryStatus.OK, response.getStatus());
                 context.assertEquals(2, response.getResults().size());
                 context.assertTrue(response.getResults().containsKey("a2V5"));//"key" as UT8/b64
                 context.assertEquals("dmFsdWU=", response.getResults().get("a2V5"));//"value" as UT8/b64
@@ -148,7 +146,6 @@ public class AllKeyValuesQueryVerticleTest {
 
                 context.assertTrue(reply.body() instanceof MultiValuedKeyValueQueryResponse);
                 MultiValuedKeyValueQueryResponse response = (MultiValuedKeyValueQueryResponse) reply.body();
-                context.assertEquals(QueryStatus.NOT_FOUND, response.getStatus());
                 context.assertEquals(0, response.getResults().size());
                 context.assertTrue(iterator.closed);
 

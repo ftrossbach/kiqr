@@ -15,19 +15,17 @@
  */
 package com.github.ftrossbach.kiqr.commons.config.querymodel.requests;
 
-import java.util.Arrays;
-
 /**
  * Created by ftr on 20/02/2017.
  */
-public class ScalarKeyValueQueryResponse extends AbstractQueryResponse {
+public class ScalarKeyValueQueryResponse {
 
     private String value;
 
     public ScalarKeyValueQueryResponse(){}
 
-    public ScalarKeyValueQueryResponse(QueryStatus status, String value) {
-        super(status);
+    public ScalarKeyValueQueryResponse(String value) {
+
         this.value = value;
     }
 

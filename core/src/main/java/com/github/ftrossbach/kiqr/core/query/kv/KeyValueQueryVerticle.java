@@ -17,9 +17,7 @@ package com.github.ftrossbach.kiqr.core.query.kv;
 
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQuery;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.QueryStatus;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQueryResponse;
-import com.github.ftrossbach.kiqr.core.query.AbstractKiqrVerticle;
 import com.github.ftrossbach.kiqr.core.query.AbstractQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.exceptions.SerdeNotFoundException;
 import org.apache.kafka.common.serialization.Serde;
@@ -55,7 +53,7 @@ public class KeyValueQueryVerticle extends AbstractQueryVerticle {
                 ReadOnlyKeyValueStore<Object, Object> kvStore = streams.store(query.getStoreName(), QueryableStoreTypes.keyValueStore());
                 Object result = kvStore.get(deserializedKey);
                 if (result != null) {
-                    msg.reply(new ScalarKeyValueQueryResponse(QueryStatus.OK, base64Encode(valueSerde, result)));
+                    msg.reply(new ScalarKeyValueQueryResponse(base64Encode(valueSerde, result)));
                 } else {
                     msg.fail(404, "No value found");
                 }

@@ -23,7 +23,6 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.KafkaStreams;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,11 +53,11 @@ public class KeyValueQueryFacadeVerticleTest {
     public void success(TestContext context){
 
         rule.vertx().eventBus().consumer(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, msg -> {
-            msg.reply(new InstanceResolverResponse(QueryStatus.OK, Optional.of("host")));
+            msg.reply(new InstanceResolverResponse(Optional.of("host")));
         });
 
         rule.vertx().eventBus().consumer(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", msg -> {
-           msg.reply(new ScalarKeyValueQueryResponse(QueryStatus.OK, "value"));
+           msg.reply(new ScalarKeyValueQueryResponse("value"));
         });
 
         rule.vertx().deployVerticle(new KeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
@@ -69,7 +68,6 @@ public class KeyValueQueryFacadeVerticleTest {
 
                 context.assertTrue(reply.body() instanceof ScalarKeyValueQueryResponse);
                 ScalarKeyValueQueryResponse response = (ScalarKeyValueQueryResponse) reply.body();
-                context.assertEquals(QueryStatus.OK, response.getStatus());
                 context.assertEquals("value", response.getValue());
 
             }));
@@ -84,7 +82,7 @@ public class KeyValueQueryFacadeVerticleTest {
 
 
         rule.vertx().eventBus().consumer(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, msg -> {
-            msg.reply(new InstanceResolverResponse(QueryStatus.OK, Optional.of("host")));
+            msg.reply(new InstanceResolverResponse(Optional.of("host")));
         });
 
         rule.vertx().eventBus().consumer(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", msg -> {

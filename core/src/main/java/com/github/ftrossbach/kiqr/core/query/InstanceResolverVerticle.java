@@ -19,7 +19,6 @@ import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.AllInstancesResponse;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.InstanceResolverQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.InstanceResolverResponse;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.QueryStatus;
 import com.github.ftrossbach.kiqr.core.query.exceptions.SerdeNotFoundException;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
@@ -58,7 +57,7 @@ public class InstanceResolverVerticle extends AbstractKiqrVerticle {
 
 
                 if(streamsMetadata != null && streamsMetadata.host() != null){
-                    msg.reply(new InstanceResolverResponse(QueryStatus.OK, Optional.of(streamsMetadata.host())));
+                    msg.reply(new InstanceResolverResponse(Optional.of(streamsMetadata.host())));
                 } else {
                     msg.fail(404, "No instance for store found: " + config.getStoreName());
                 }

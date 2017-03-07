@@ -20,15 +20,14 @@ import java.util.Optional;
 /**
  * Created by ftr on 20/02/2017.
  */
-public class InstanceResolverResponse extends AbstractQueryResponse{
+public class InstanceResolverResponse {
 
     private Optional<String> instanceId;
 
     public InstanceResolverResponse() {
     }
 
-    public InstanceResolverResponse(QueryStatus status, Optional<String> instanceId) {
-        super(status);
+    public InstanceResolverResponse(Optional<String> instanceId) {
         this.instanceId = instanceId;
     }
 

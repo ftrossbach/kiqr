@@ -22,7 +22,7 @@ import java.util.SortedMap;
 /**
  * Created by ftr on 20/02/2017.
  */
-public class WindowedQueryResponse extends AbstractQueryResponse{
+public class WindowedQueryResponse {
 
 
 
@@ -32,8 +32,8 @@ public class WindowedQueryResponse extends AbstractQueryResponse{
 
     }
 
-    public WindowedQueryResponse(QueryStatus status, SortedMap<Long, String> values) {
-        super(status);
+    public WindowedQueryResponse(SortedMap<Long, String> values) {
+
         this.values = values;
     }
 

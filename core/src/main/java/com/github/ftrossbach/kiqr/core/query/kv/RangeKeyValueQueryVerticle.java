@@ -17,9 +17,7 @@ package com.github.ftrossbach.kiqr.core.query.kv;
 
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.MultiValuedKeyValueQueryResponse;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.QueryStatus;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.RangeKeyValueQuery;
-import com.github.ftrossbach.kiqr.core.query.AbstractKiqrVerticle;
 import com.github.ftrossbach.kiqr.core.query.AbstractQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.exceptions.SerdeNotFoundException;
 import org.apache.kafka.common.serialization.Serde;
@@ -64,9 +62,9 @@ public class RangeKeyValueQueryVerticle extends AbstractQueryVerticle {
                             KeyValue<Object, Object> kvEntry = result.next();
                             results.put(base64Encode(keySerde, kvEntry.key), base64Encode(valueSerde, kvEntry.value));
                         }
-                        msg.reply(new MultiValuedKeyValueQueryResponse(QueryStatus.OK, results));
+                        msg.reply(new MultiValuedKeyValueQueryResponse(results));
                     } else {
-                        msg.reply(new MultiValuedKeyValueQueryResponse(QueryStatus.NOT_FOUND, Collections.emptyMap()));
+                        msg.reply(new MultiValuedKeyValueQueryResponse(Collections.emptyMap()));
                     }
                 }
             } catch (SerdeNotFoundException e) {
