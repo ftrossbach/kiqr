@@ -126,10 +126,10 @@ public class HttpServer extends AbstractVerticle {
             String to = request.getParam("to");
 
             if (keySerde == null || valueSerde == null) {
-                routingContext.fail(404);
+                routingContext.fail(400);
             }
-            else if (from == null && to == null) {
-                routingContext.fail(404);
+            else if (from == null || to == null) {
+                routingContext.fail(400);
             } else {
                 WindowedQuery query = new WindowedQuery(store, keySerde, key,valueSerde, Long.valueOf(from), Long.valueOf(to));
 
@@ -145,6 +145,8 @@ public class HttpServer extends AbstractVerticle {
                                 .end(Json.encode(body));
 
 
+                    } else {
+                        forwardErrorCode(routingContext, reply);
                     }
                 });
             }
