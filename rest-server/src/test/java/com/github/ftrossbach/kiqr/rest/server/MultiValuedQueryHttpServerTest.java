@@ -93,7 +93,7 @@ public class MultiValuedQueryHttpServerTest {
     }
 
     @Test
-    public void valuesEmpty(TestContext context) {
+    public void allKValuesEmpty(TestContext context) {
 
         Async async = context.async();
 
@@ -110,6 +110,62 @@ public class MultiValuedQueryHttpServerTest {
             async.complete();
         }).end();
     }
+
+
+
+    @Test
+    public void readRangeValue(TestContext context) throws Exception {
+
+        Async async = context.async();
+
+        RuntimeVerticle mock = mock(RuntimeVerticle.class);
+
+
+
+        rule.vertx().eventBus().consumer(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, msg -> {
+            context.assertTrue(msg.body() instanceof RangeKeyValueQuery);
+            RangeKeyValueQuery query = (RangeKeyValueQuery) msg.body();
+
+            context.assertEquals("store", query.getStoreName());
+            context.assertEquals(Serdes.String().getClass().getName(), query.getKeySerde());
+            context.assertEquals(Serdes.Long().getClass().getName(), query.getValueSerde());
+            context.assertTrue(query.getFrom().length > 0);
+            context.assertTrue(query.getTo().length > 0);
+
+            Map<String, String> results = new HashMap<>();
+            results.put("key1", "value1");
+            results.put("key2", "value2");
+
+            msg.reply(new MultiValuedKeyValueQueryResponse(results));
+
+        });
+
+        rule.vertx().createHttpClient().get(5762, "localhost", String.format("/api/v1/kv/store?keySerde=%s&valueSerde=%s&from=from&to=to", Serdes.String().getClass().getName(), Serdes.Long().getClass().getName()), res ->{
+
+            context.assertEquals(200, res.statusCode());
+            async.complete();
+        }).end();
+    }
+
+    @Test
+    public void rangeEmpty(TestContext context) {
+
+        Async async = context.async();
+
+
+        rule.vertx().eventBus().consumer(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, msg -> {
+
+            msg.reply(new MultiValuedKeyValueQueryResponse(Collections.emptyMap()));
+
+        });
+
+        rule.vertx().createHttpClient().get(5762, "localhost", String.format("/api/v1/kv/store?keySerde=%s&valueSerde=%s&from=from&to=to", Serdes.String().getClass().getName(), Serdes.Long().getClass().getName()), res ->{
+
+            context.assertEquals(200, res.statusCode());
+            async.complete();
+        }).end();
+    }
+
 
     @Test
     public void noKeySerde(TestContext context) {
