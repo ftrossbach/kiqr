@@ -28,6 +28,7 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
@@ -175,9 +176,10 @@ public class HttpServer extends AbstractVerticle {
                     if(reply.succeeded()){
                         ScalarKeyValueQueryResponse body = (ScalarKeyValueQueryResponse) reply.result().body();
                         HttpServerResponse response = routingContext.response();
+                        System.out.println(reply.result().body());
                         response
                                 .putHeader("content-type", "application/json")
-                                .end(Json.encode(body));
+                                .end(JsonObject.mapFrom(reply.result().body()).encode());
 
 
                     } else {

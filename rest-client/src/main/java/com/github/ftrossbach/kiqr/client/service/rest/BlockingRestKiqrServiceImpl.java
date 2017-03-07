@@ -17,6 +17,8 @@ package com.github.ftrossbach.kiqr.client.service.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.ftrossbach.kiqr.client.service.BlockingKiqrService;
+import com.github.ftrossbach.kiqr.client.service.ConnectionException;
+import com.github.ftrossbach.kiqr.client.service.QueryExecutionException;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.MultiValuedKeyValueQueryResponse;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQueryResponse;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.WindowedQueryResponse;
@@ -69,17 +71,17 @@ public class BlockingRestKiqrServiceImpl implements BlockingKiqrService {
                 return Optional.of(deserialize(valueClass, valueSerde, resp.getValue()));
 
 
-            } else {
+            } else if (response.getStatusLine().getStatusCode() == 404) {
                 return Optional.empty();
+            } else if (response.getStatusLine().getStatusCode() == 400) {
+                throw new IllegalArgumentException("Bad Request");
+            } else {
+                throw new QueryExecutionException("Something went wrong, status code: " + response.getStatusLine().getStatusCode());
             }
 
 
-        } catch (URISyntaxException e) {
-            throw new RuntimeException("Error constructing endpoint", e);
-        } catch (ClientProtocolException e) {
-            throw new RuntimeException("Error constructing request", e);
-        } catch (IOException e) {
-            throw new RuntimeException("Error executing endpoint", e);
+        } catch (URISyntaxException | IOException e) {
+            throw new ConnectionException("Error creating connection", e);
         }
 
 
