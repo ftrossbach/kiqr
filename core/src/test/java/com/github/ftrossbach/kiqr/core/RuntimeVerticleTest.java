@@ -60,6 +60,20 @@ public class RuntimeVerticleTest {
 
     }
 
+    @Test
+    public void failingStart(TestContext context){
+
+        KafkaStreams streamsMock = mock(KafkaStreams.class);
+        KStreamBuilder builderMock = mock(KStreamBuilder.class);
+        Properties props = new Properties();
+        RuntimeVerticle verticleSpy = spy(new RuntimeVerticle(builderMock, props));
+
+        doThrow(RuntimeException.class).when(verticleSpy).createAndStartStream();
+
+        rule.vertx().deployVerticle(verticleSpy, context.asyncAssertFailure());
+
+    }
+
 
     @Test
     public void builderApplicationId(){
