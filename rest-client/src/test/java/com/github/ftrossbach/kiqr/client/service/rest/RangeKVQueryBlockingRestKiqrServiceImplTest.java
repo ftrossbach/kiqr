@@ -5,7 +5,7 @@ import com.github.ftrossbach.kiqr.client.service.QueryExecutionException;
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.AllKeyValuesQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.MultiValuedKeyValueQueryResponse;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQueryResponse;
+import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.RangeKeyValueQuery;
 import com.github.ftrossbach.kiqr.core.query.KiqrCodec;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.unit.Async;
@@ -26,7 +26,7 @@ import java.util.Optional;
  * Created by ftr on 07/03/2017.
  */
 @RunWith(VertxUnitRunner.class)
-public class AllKVQueryBlockingRestKiqrServiceImplTest {
+public class RangeKVQueryBlockingRestKiqrServiceImplTest {
 
     BlockingRestKiqrServiceImpl unitUnderTest = new BlockingRestKiqrServiceImpl("localhost", 4567);
 
@@ -42,7 +42,7 @@ public class AllKVQueryBlockingRestKiqrServiceImplTest {
 
     @Before
     public void setUp() {
-        rule.vertx().eventBus().registerDefaultCodec(AllKeyValuesQuery.class, new KiqrCodec(AllKeyValuesQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(RangeKeyValueQuery.class, new KiqrCodec(RangeKeyValueQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(MultiValuedKeyValueQueryResponse.class, new KiqrCodec(MultiValuedKeyValueQueryResponse.class));
 
 
@@ -55,7 +55,7 @@ public class AllKVQueryBlockingRestKiqrServiceImplTest {
 
         rule.vertx().deployVerticle(new MockedRuntimeHttpServerVerticle(new HttpServerOptions().setPort(4567), new DummyVerticle()), context.asyncAssertSuccess(handler -> {
 
-            rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, msg -> {
+            rule.vertx().eventBus().consumer(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, msg -> {
 
 
                 Map<String, String> result = new HashMap<>();
@@ -69,7 +69,7 @@ public class AllKVQueryBlockingRestKiqrServiceImplTest {
 
             rule.vertx().<Void>executeBlocking(future -> {
 
-                Map<String, Long> result = unitUnderTest.getAllKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long());
+                Map<String, Long> result = unitUnderTest.getRangeKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long(), "key1", "key2");
                 context.assertFalse(result.isEmpty());
                 context.assertEquals(2, result.size());
                 context.assertNotNull(result.get("key1"));
@@ -91,7 +91,7 @@ public class AllKVQueryBlockingRestKiqrServiceImplTest {
 
         rule.vertx().deployVerticle(new MockedRuntimeHttpServerVerticle(new HttpServerOptions().setPort(4567), new DummyVerticle()), context.asyncAssertSuccess(handler -> {
 
-            rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, msg -> {
+            rule.vertx().eventBus().consumer(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, msg -> {
 
                 msg.fail(404, "does not matter");
 
@@ -99,7 +99,8 @@ public class AllKVQueryBlockingRestKiqrServiceImplTest {
 
             rule.vertx().<Void>executeBlocking(future -> {
 
-                Map<String, Long> result = unitUnderTest.getAllKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long());
+
+                Map<String, Long> result = unitUnderTest.getRangeKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long(), "key1", "key2");
                 context.assertTrue(result.isEmpty());
                 async.complete();
 
@@ -116,7 +117,7 @@ public class AllKVQueryBlockingRestKiqrServiceImplTest {
 
         rule.vertx().deployVerticle(new MockedRuntimeHttpServerVerticle(new HttpServerOptions().setPort(4567), new DummyVerticle()), context.asyncAssertSuccess(handler -> {
 
-            rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, msg -> {
+            rule.vertx().eventBus().consumer(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, msg -> {
 
                 msg.fail(400, "does not matter");
 
@@ -124,8 +125,7 @@ public class AllKVQueryBlockingRestKiqrServiceImplTest {
 
             rule.vertx().<Void>executeBlocking(future -> {
 
-
-                Map<String, Long> result = unitUnderTest.getAllKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long());
+                Map<String, Long> result = unitUnderTest.getRangeKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long(), "key1", "key2");
                 context.fail();
 
 
@@ -145,7 +145,7 @@ public class AllKVQueryBlockingRestKiqrServiceImplTest {
 
         rule.vertx().deployVerticle(new MockedRuntimeHttpServerVerticle(new HttpServerOptions().setPort(4567), new DummyVerticle()), context.asyncAssertSuccess(handler -> {
 
-            rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, msg -> {
+            rule.vertx().eventBus().consumer(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, msg -> {
 
                 msg.fail(500, "does not matter");
 
@@ -154,7 +154,7 @@ public class AllKVQueryBlockingRestKiqrServiceImplTest {
             rule.vertx().<Void>executeBlocking(future -> {
 
 
-                Map<String, Long> result = unitUnderTest.getAllKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long());
+                Map<String, Long> result = unitUnderTest.getRangeKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long(), "key1", "key2");
                 context.fail();
 
 
@@ -178,8 +178,8 @@ public class AllKVQueryBlockingRestKiqrServiceImplTest {
             rule.vertx().<Void>executeBlocking(future -> {
 
                 unitUnderTest = new BlockingRestKiqrServiceImpl("localhost", -1);
-                Map<String, Long> result = unitUnderTest.getAllKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long());
 
+                Map<String, Long> result = unitUnderTest.getRangeKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long(), "key1", "key2");
                 context.fail();
 
 
@@ -201,8 +201,8 @@ public class AllKVQueryBlockingRestKiqrServiceImplTest {
             rule.vertx().<Void>executeBlocking(future -> {
 
                 unitUnderTest = new BlockingRestKiqrServiceImpl("host with spaces", 4567);
-                Map<String, Long> result = unitUnderTest.getAllKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long());
 
+                Map<String, Long> result = unitUnderTest.getRangeKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long(), "key1", "key2");
                 context.fail();
 
 
@@ -224,7 +224,7 @@ public class AllKVQueryBlockingRestKiqrServiceImplTest {
             rule.vertx().<Void>executeBlocking(future -> {
 
                 unitUnderTest = new BlockingRestKiqrServiceImpl("ihopethisdoesntexist", 4567);
-                Map<String, Long> result = unitUnderTest.getAllKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long());
+                Map<String, Long> result = unitUnderTest.getRangeKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long(), "key1", "key2");
                 context.fail();
 
 

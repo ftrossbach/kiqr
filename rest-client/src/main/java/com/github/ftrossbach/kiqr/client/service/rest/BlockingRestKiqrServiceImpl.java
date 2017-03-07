@@ -152,17 +152,17 @@ public class BlockingRestKiqrServiceImpl implements BlockingKiqrService {
                         }).collect(Collectors.toMap(Pair::getKey, pair -> pair.getValue()));
 
 
-            } else {
+            } else if (response.getStatusLine().getStatusCode() == 404) {
                 return Collections.emptyMap();
+            } else if (response.getStatusLine().getStatusCode() == 400) {
+                throw new IllegalArgumentException("Bad Request");
+            } else {
+                throw new QueryExecutionException("Something went wrong, status code: " + response.getStatusLine().getStatusCode());
             }
 
 
-        } catch (URISyntaxException e) {
-            throw new RuntimeException("Error constructing endpoint", e);
-        } catch (ClientProtocolException e) {
-            throw new RuntimeException("Error constructing request", e);
-        } catch (IOException e) {
-            throw new RuntimeException("Error executing endpoint", e);
+        } catch (URISyntaxException | IOException e) {
+            throw new ConnectionException("Error creating connection", e);
         }
     }
 
