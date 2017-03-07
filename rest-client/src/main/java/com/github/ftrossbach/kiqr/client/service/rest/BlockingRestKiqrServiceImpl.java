@@ -1,12 +1,12 @@
 /**
  * Copyright © 2017 Florian Troßbach (trossbach@gmail.com)
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -192,17 +192,17 @@ public class BlockingRestKiqrServiceImpl implements BlockingKiqrService {
                         }).collect(Collectors.toMap(Pair::getKey, pair -> pair.getValue())));
 
 
-            } else {
+            } else if (response.getStatusLine().getStatusCode() == 404) {
                 return Collections.emptyMap();
+            } else if (response.getStatusLine().getStatusCode() == 400) {
+                throw new IllegalArgumentException("Bad Request");
+            } else {
+                throw new QueryExecutionException("Something went wrong, status code: " + response.getStatusLine().getStatusCode());
             }
 
 
-        } catch (URISyntaxException e) {
-            throw new RuntimeException("Error constructing endpoint", e);
-        } catch (ClientProtocolException e) {
-            throw new RuntimeException("Error constructing request", e);
-        } catch (IOException e) {
-            throw new RuntimeException("Error executing endpoint", e);
+        } catch (URISyntaxException | IOException e) {
+            throw new ConnectionException("Error creating connection", e);
         }
 
     }
