@@ -1,5 +1,7 @@
 package com.github.ftrossbach.kiqr.client.service.rest;
 
+import com.github.ftrossbach.kiqr.client.service.ConnectionException;
+import com.github.ftrossbach.kiqr.client.service.QueryExecutionException;
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQueryResponse;
@@ -105,15 +107,118 @@ public class ScalarKVQueryBlockingRestKiqrServiceImplTest {
 
             rule.vertx().<Void>executeBlocking(future -> {
 
-                try{
+
                     Optional<Long> scalarKeyValue = unitUnderTest.getScalarKeyValue("store", String.class, "key", Long.class, Serdes.String(), Serdes.Long());
                     context.fail();
 
-                } finally {
-                    async.complete();
-                }
 
-            }, context.asyncAssertFailure());
+
+
+            }, context.asyncAssertFailure(ex -> {
+
+                context.assertTrue(ex instanceof IllegalArgumentException);
+                async.complete();
+            }));
+
+        }));
+
+    }
+
+    @Test
+    public void internalServerError(TestContext context){
+        Async async = context.async();
+
+        rule.vertx().deployVerticle(new MockedRuntimeHttpServerVerticle(new HttpServerOptions().setPort(4567), new DummyVerticle()), context.asyncAssertSuccess(handler -> {
+
+            rule.vertx().eventBus().consumer(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, msg -> {
+
+                msg.fail(500, "does not matter");
+
+            });
+
+            rule.vertx().<Void>executeBlocking(future -> {
+
+
+                    Optional<Long> scalarKeyValue = unitUnderTest.getScalarKeyValue("store", String.class, "key", Long.class, Serdes.String(), Serdes.Long());
+                    context.fail();
+
+
+
+            }, context.asyncAssertFailure(ex -> {
+                context.assertTrue(ex instanceof QueryExecutionException);
+                async.complete();
+            }));
+
+        }));
+
+    }
+
+    @Test
+    public void connectionExceptionInvalidPort(TestContext context){
+
+
+        Async async = context.async();
+
+        rule.vertx().deployVerticle(new MockedRuntimeHttpServerVerticle(new HttpServerOptions().setPort(4567), new DummyVerticle()), context.asyncAssertSuccess(handler -> {
+
+            rule.vertx().<Void>executeBlocking(future -> {
+
+                unitUnderTest = new BlockingRestKiqrServiceImpl("localhost", -1);
+                Optional<Long> scalarKeyValue = unitUnderTest.getScalarKeyValue("store", String.class, "key", Long.class, Serdes.String(), Serdes.Long());
+                context.fail();
+
+
+
+            }, context.asyncAssertFailure(ex -> {
+                context.assertTrue(ex instanceof ConnectionException);
+                async.complete();
+            }));
+
+        }));
+
+    }
+
+    @Test
+    public void connectionExceptionInvalidHost(TestContext context){
+        Async async = context.async();
+
+        rule.vertx().deployVerticle(new MockedRuntimeHttpServerVerticle(new HttpServerOptions().setPort(4567), new DummyVerticle()), context.asyncAssertSuccess(handler -> {
+
+            rule.vertx().<Void>executeBlocking(future -> {
+
+                unitUnderTest = new BlockingRestKiqrServiceImpl("host with spaces", 4567);
+                Optional<Long> scalarKeyValue = unitUnderTest.getScalarKeyValue("store", String.class, "key", Long.class, Serdes.String(), Serdes.Long());
+                context.fail();
+
+
+
+            }, context.asyncAssertFailure(ex -> {
+                context.assertTrue(ex instanceof ConnectionException);
+                async.complete();
+            }));
+
+        }));
+
+    }
+
+    @Test
+    public void validButUnReachableHost(TestContext context){
+        Async async = context.async();
+
+        rule.vertx().deployVerticle(new MockedRuntimeHttpServerVerticle(new HttpServerOptions().setPort(4567), new DummyVerticle()), context.asyncAssertSuccess(handler -> {
+
+            rule.vertx().<Void>executeBlocking(future -> {
+
+                unitUnderTest = new BlockingRestKiqrServiceImpl("ihopethisdoesntexist", 4567);
+                Optional<Long> scalarKeyValue = unitUnderTest.getScalarKeyValue("store", String.class, "key", Long.class, Serdes.String(), Serdes.Long());
+                context.fail();
+
+
+
+            }, context.asyncAssertFailure(ex -> {
+                context.assertTrue(ex instanceof ConnectionException);
+                async.complete();
+            }));
 
         }));
 
