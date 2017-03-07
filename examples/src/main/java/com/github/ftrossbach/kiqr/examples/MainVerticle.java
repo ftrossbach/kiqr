@@ -15,9 +15,6 @@
  */
 package com.github.ftrossbach.kiqr.examples;
 
-import com.github.ftrossbach.kiqr.commons.config.Config;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
-import com.github.ftrossbach.kiqr.core.RuntimeVerticle;
 import com.github.ftrossbach.kiqr.rest.server.HttpServer;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -51,7 +48,7 @@ public class MainVerticle extends AbstractVerticle {
 
 
 
-        vertx.deployVerticle(new HttpServer.Builder(builder, props).withHttpServer(2901).build(), res -> {
+        vertx.deployVerticle(new HttpServer.Builder(builder, props).withPort(2901).build(), res -> {
             if (res.succeeded()) {
                 startFuture.complete();
             } else {

@@ -56,12 +56,12 @@ public class HttpServer extends AbstractVerticle {
             super(builder, properties);
         }
 
-        public Builder withHttpServer(HttpServerOptions options) {
+        public Builder withOptions(HttpServerOptions options) {
             this.httpServerOptions = options;
             return this;
         }
 
-        public Builder withHttpServer(int port) {
+        public Builder withPort(int port) {
             this.httpServerOptions = new HttpServerOptions().setPort(port);
             return this;
         }
@@ -69,12 +69,12 @@ public class HttpServer extends AbstractVerticle {
         @Override
         public AbstractVerticle build() {
             AbstractVerticle runtimeVerticle = super.build();
-            return new HttpServer(httpServerOptions, runtimeVerticle);
+            return new HttpServer(httpServerOptions != null ? httpServerOptions : new HttpServerOptions(), runtimeVerticle);
         }
     }
 
-    private final HttpServerOptions serverOptions;
-    private final AbstractVerticle runtimeVerticle;
+    protected final HttpServerOptions serverOptions;
+    protected final AbstractVerticle runtimeVerticle;
 
     protected HttpServer(HttpServerOptions serverOptions, AbstractVerticle runtimeVerticle) {
         this.serverOptions = serverOptions;
