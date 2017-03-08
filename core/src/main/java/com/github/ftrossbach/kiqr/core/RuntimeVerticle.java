@@ -31,7 +31,6 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.Json;
 
 import org.apache.kafka.common.serialization.Serde;
@@ -52,6 +51,7 @@ public class RuntimeVerticle extends AbstractVerticle {
 
         private final KStreamBuilder builder;
         private final Properties properties;
+        private KafkaStreams.StateListener listener;
 
         public Builder(KStreamBuilder builder) {
             this.builder = builder;
@@ -103,12 +103,17 @@ public class RuntimeVerticle extends AbstractVerticle {
             return this;
         }
 
+        public Builder withStateListener(KafkaStreams.StateListener listener){
+            this.listener = listener;
+            return this;
+        }
+
 
 
 
         public AbstractVerticle build() {
 
-            return new RuntimeVerticle(builder, properties);
+            return new RuntimeVerticle(builder, properties, listener);
         }
 
 
@@ -116,11 +121,14 @@ public class RuntimeVerticle extends AbstractVerticle {
 
     private final KStreamBuilder builder;
     protected final Properties props;
+    private final KafkaStreams.StateListener listener;
+    private KafkaStreams streams;
 
 
-    protected RuntimeVerticle(KStreamBuilder builder, Properties props) {
+    protected RuntimeVerticle(KStreamBuilder builder, Properties props, KafkaStreams.StateListener listener) {
         this.builder = builder;
         this.props = props;
+        this.listener = listener;
     }
 
 
@@ -170,7 +178,8 @@ public class RuntimeVerticle extends AbstractVerticle {
     }
 
     protected  KafkaStreams createAndStartStream(){
-        KafkaStreams streams = new KafkaStreams(builder, props);
+        streams = new KafkaStreams(builder, props);
+        if(listener != null) streams.setStateListener(listener);
         streams.start();
         return streams;
     }
@@ -215,5 +224,15 @@ public class RuntimeVerticle extends AbstractVerticle {
         vertx.eventBus().registerDefaultCodec(clazz, new KiqrCodec<>(clazz));
     }
 
+    @Override
+    public void stop(Future<Void> stopFuture) throws Exception {
+        vertx.<Void>executeBlocking(future -> {
 
+           streams.close();
+           future.complete();
+
+        }, msg -> {
+
+        });
+    }
 }

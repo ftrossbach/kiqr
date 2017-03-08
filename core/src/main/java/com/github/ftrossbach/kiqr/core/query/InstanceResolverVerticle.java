@@ -55,8 +55,9 @@ public class InstanceResolverVerticle extends AbstractKiqrVerticle {
                 Object deserializedKey = serde.deserializer().deserialize("?", config.getKey());
                 StreamsMetadata streamsMetadata = streams.metadataForKey(config.getStoreName(), deserializedKey, serde.serializer());
 
-
+                System.out.println(streamsMetadata);
                 if(streamsMetadata != null && streamsMetadata.host() != null){
+
                     msg.reply(new InstanceResolverResponse(Optional.of(streamsMetadata.host())));
                 } else {
                     msg.fail(404, "No instance for store found: " + config.getStoreName());

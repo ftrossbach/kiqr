@@ -57,12 +57,12 @@ public class HttpServer extends AbstractVerticle {
             super(builder, properties);
         }
 
-        public Builder withOptions(HttpServerOptions options) {
+        public HttpServer.Builder withOptions(HttpServerOptions options) {
             this.httpServerOptions = options;
             return this;
         }
 
-        public Builder withPort(int port) {
+        public HttpServer.Builder withPort(int port) {
             this.httpServerOptions = new HttpServerOptions().setPort(port);
             return this;
         }
@@ -184,6 +184,7 @@ public class HttpServer extends AbstractVerticle {
 
                     } else {
 
+                        reply.cause().printStackTrace();
                         forwardErrorCode(routingContext, reply);
                     }
                 });

@@ -17,3 +17,6 @@ before_install:
 
 after_success:
   - mvn clean test jacoco:report coveralls:report
+
+env:
+- KAFKA_PORT=29092

@@ -15,7 +15,6 @@
  */
 package com.github.ftrossbach.kiqr.core;
 
-import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -48,7 +47,7 @@ public class RuntimeVerticleTest {
         KafkaStreams streamsMock = mock(KafkaStreams.class);
         KStreamBuilder builderMock = mock(KStreamBuilder.class);
         Properties props = new Properties();
-        RuntimeVerticle verticleSpy = spy(new RuntimeVerticle(builderMock, props));
+        RuntimeVerticle verticleSpy = spy(new RuntimeVerticle(builderMock, props, null));
 
         doReturn(streamsMock).when(verticleSpy).createAndStartStream();
 
@@ -66,7 +65,7 @@ public class RuntimeVerticleTest {
         KafkaStreams streamsMock = mock(KafkaStreams.class);
         KStreamBuilder builderMock = mock(KStreamBuilder.class);
         Properties props = new Properties();
-        RuntimeVerticle verticleSpy = spy(new RuntimeVerticle(builderMock, props));
+        RuntimeVerticle verticleSpy = spy(new RuntimeVerticle(builderMock, props, null));
 
         doThrow(RuntimeException.class).when(verticleSpy).createAndStartStream();
 
