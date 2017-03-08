@@ -60,7 +60,7 @@ public class KeyValueQueryVerticle extends AbstractQueryVerticle {
             }  catch (SerdeNotFoundException e) {
                 msg.fail(400, e.getMessage());
             } catch (InvalidStateStoreException e) {
-                msg.fail(409, String.format("Store not available due to rebalancing"));
+                msg.fail(500, String.format("Store not available due to rebalancing or wrong store type"));
             } catch (RuntimeException e) {
                 msg.fail(500, e.getMessage());
             }

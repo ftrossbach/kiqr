@@ -1,6 +1,7 @@
 package com.github.ftrossbach.kiqr.client.service.rest;
 
 import com.github.ftrossbach.kiqr.client.service.BlockingKiqrService;
+import com.github.ftrossbach.kiqr.client.service.QueryExecutionException;
 import com.github.ftrossbach.kiqr.core.RuntimeVerticle;
 import com.github.ftrossbach.kiqr.rest.server.HttpServer;
 import io.vertx.core.AbstractVerticle;
@@ -15,6 +16,7 @@ import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.TimeWindows;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import java.util.*;
@@ -43,6 +45,7 @@ public class IntegrationTest {
 
     private static String TOPIC = UUID.randomUUID().toString();
 
+    private static final Vertx VERTX = Vertx.vertx();
 
     @BeforeClass
     public static void produceMessages() throws Exception{
@@ -125,15 +128,16 @@ public class IntegrationTest {
 
         CountDownLatch streamCdl = new CountDownLatch(2);
 
-        Vertx vertx = Vertx.vertx();
+
         HttpServer.Builder verticleBuilder = new HttpServer.Builder(builder, streamProps);
         RuntimeVerticle.Builder builder1 = verticleBuilder.withPort(44321).withStateListener((newState, oldState) -> {
             if (newState == KafkaStreams.State.RUNNING) streamCdl.countDown();
+            System.out.println(oldState + " - " + newState);
         });
 
         AbstractVerticle verticle = verticleBuilder.build();
 
-        vertx.deployVerticle(verticle);
+        VERTX.deployVerticle(verticle);
 
         streamCdl.await(10000, TimeUnit.MILLISECONDS);
 
@@ -157,6 +161,38 @@ public class IntegrationTest {
     }
 
     @Test
+    public void notFoundScalarQuery() throws Exception{
+
+
+
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
+
+        Optional<Long> resultKey1 = client.getScalarKeyValue("kv", String.class, "key5", Long.class, Serdes.String(), Serdes.Long());
+        assertFalse(resultKey1.isPresent());
+
+    }
+
+    @Test
+    public void noSuchStoreScalarQuery() throws Exception{
+
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
+
+        Optional<Long> resultKey1 = client.getScalarKeyValue("idontexist", String.class, "key1", Long.class, Serdes.String(), Serdes.Long());
+        assertFalse(resultKey1.isPresent());
+
+    }
+
+    @Test(expected = QueryExecutionException.class)
+    public void wrongStoreTypeScalarQuery() throws Exception{
+
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
+
+        Optional<Long> resultKey1 = client.getScalarKeyValue("window", String.class, "key1", Long.class, Serdes.String(), Serdes.Long());
+
+
+    }
+
+    @Test
     public void successfulAllQuery() throws Exception{
 
         BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
@@ -170,6 +206,29 @@ public class IntegrationTest {
 
     }
 
+
+    @Test
+    public void noSuchStoreAllQuery() throws Exception{
+
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
+
+        Map<String, Long> result = client.getAllKeyValues("idontexist", String.class, Long.class, Serdes.String(), Serdes.Long());
+        assertTrue(result.isEmpty());
+
+
+    }
+
+
+    @Test(expected = QueryExecutionException.class)
+    public void wrongStoreTypeAllQuery() throws Exception{
+
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
+
+        Map<String, Long> result = client.getAllKeyValues("window", String.class, Long.class, Serdes.String(), Serdes.Long());
+
+
+    }
+
     @Test
     public void successfulRangeQuery() throws Exception{
 
@@ -179,6 +238,48 @@ public class IntegrationTest {
         assertThat(result.entrySet(),hasSize(2));
         assertThat(result, hasEntry("key1", 3L));
         assertThat(result, hasEntry("key2", 6L));
+
+    }
+
+    @Test
+    public void emptyRangeQuery() throws Exception{
+
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
+
+        Map<String, Long> result = client.getRangeKeyValues("kv", String.class, Long.class, Serdes.String(), Serdes.Long(), "key6", "key7");
+        assertThat(result.entrySet(),is(empty()));
+
+    }
+
+    @Test(expected = QueryExecutionException.class)
+    public void invertedRangeQuery() throws Exception{
+
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
+
+        Map<String, Long> result = client.getRangeKeyValues("kv", String.class, Long.class, Serdes.String(), Serdes.Long(), "key3", "key1");
+        assertThat(result.entrySet(),is(empty()));
+
+    }
+
+    @Test
+    public void noSuchStoreRangeQuery() throws Exception{
+
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
+
+        Map<String, Long> result = client.getRangeKeyValues("idontexist", String.class, Long.class, Serdes.String(), Serdes.Long(), "key1", "key2");
+        assertTrue(result.isEmpty());
+
+
+    }
+
+    @Test(expected = QueryExecutionException.class)
+    public void wrongStoreTypeRangeQuery() throws Exception{
+
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
+
+        Map<String, Long> result = client.getRangeKeyValues("window", String.class, Long.class, Serdes.String(), Serdes.Long(), "key1", "key2");
+
+
 
     }
 
@@ -208,8 +309,11 @@ public class IntegrationTest {
         assertThat(resultKey4, hasEntry(0L, 3L));
 
 
+    }
 
-
+    @AfterClass
+    public static void tearDown(){
+        VERTX.close();
     }
 
 
