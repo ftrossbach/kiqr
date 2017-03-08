@@ -50,6 +50,8 @@ public class WindowedQueryVerticle extends AbstractQueryVerticle {
                 Serde<Object> valueSerde = getSerde(query.getValueSerde());
 
                 ReadOnlyWindowStore<Object, Object> windowStore = streams.store(query.getStoreName(), QueryableStoreTypes.windowStore());
+
+                WindowedQueryResponse response;
                 try (WindowStoreIterator<Object> result = windowStore.fetch(deserializeObject(keySerde, query.getKey()), query.getFrom(), query.getTo())) {
 
                     if (result.hasNext()) {
@@ -58,11 +60,13 @@ public class WindowedQueryVerticle extends AbstractQueryVerticle {
                             KeyValue<Long, Object> windowedEntry = result.next();
                             results.put(windowedEntry.key, base64Encode(valueSerde, windowedEntry.value));
                         }
-                        msg.reply(new WindowedQueryResponse(results));
+                        response = new WindowedQueryResponse(results);
                     } else {
-                        msg.reply(new WindowedQueryResponse(Collections.emptySortedMap()));
+                        response = new WindowedQueryResponse(Collections.emptySortedMap());
                     }
                 }
+
+                msg.reply(response);
             } catch (SerdeNotFoundException e) {
                 msg.fail(400, e.getMessage());
             } catch (InvalidStateStoreException e) {

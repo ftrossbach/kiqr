@@ -52,6 +52,7 @@ public class AllKeyValuesQueryVerticle extends AbstractQueryVerticle {
                 Serde<Object> valueSerde = getSerde(query.getValueSerde());
 
                 ReadOnlyKeyValueStore<Object, Object> kvStore = streams.store(query.getStoreName(), QueryableStoreTypes.keyValueStore());
+                MultiValuedKeyValueQueryResponse response;
                 try (KeyValueIterator<Object, Object> result = kvStore.all()) {
                     if (result.hasNext()) {
                         Map<String, String> results = new HashMap<>();
@@ -60,11 +61,12 @@ public class AllKeyValuesQueryVerticle extends AbstractQueryVerticle {
 
                             results.put(base64Encode(keySerde, kvEntry.key), base64Encode(valueSerde, kvEntry.value));
                         }
-                        msg.reply(new MultiValuedKeyValueQueryResponse(results));
+                       response = new MultiValuedKeyValueQueryResponse(results);
                     } else {
-                        msg.reply(new MultiValuedKeyValueQueryResponse(Collections.emptyMap()));
+                        response = new MultiValuedKeyValueQueryResponse(Collections.emptyMap());
                     }
                 }
+                msg.reply(response);
             } catch (SerdeNotFoundException e) {
                 msg.fail(400, e.getMessage());
             } catch (InvalidStateStoreException e) {
