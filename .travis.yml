@@ -6,5 +6,8 @@ notifications:
     on_success: never # default: change
     on_failure: always # default: always
 
+before_install:
+  - docker-compose up
+
 after_success:
   - mvn clean test jacoco:report coveralls:report
