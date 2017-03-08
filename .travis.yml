@@ -1,6 +1,12 @@
 language: java
 jdk:
   - oraclejdk8
+
+sudo: required
+
+services:
+  - docker
+
 notifications:
   email:
     on_success: never # default: change
