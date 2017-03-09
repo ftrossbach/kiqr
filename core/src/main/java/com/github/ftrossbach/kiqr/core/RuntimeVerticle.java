@@ -16,6 +16,7 @@
 package com.github.ftrossbach.kiqr.core;
 
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
 import com.github.ftrossbach.kiqr.core.query.InstanceResolverVerticle;
 import com.github.ftrossbach.kiqr.core.query.KiqrCodec;
@@ -31,6 +32,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.Json;
 
 import org.apache.kafka.common.serialization.Serde;
@@ -179,7 +181,14 @@ public class RuntimeVerticle extends AbstractVerticle {
 
     protected  KafkaStreams createAndStartStream(){
         streams = new KafkaStreams(builder, props);
-        if(listener != null) streams.setStateListener(listener);
+
+
+
+        streams.setStateListener(((newState, oldState) -> {
+            vertx.eventBus().publish(Config.CLUSTER_STATE_BROADCAST_ADDRESS, newState.toString());
+            if(listener != null) listener.onChange(newState, oldState);
+        }));
+
         streams.start();
         return streams;
     }

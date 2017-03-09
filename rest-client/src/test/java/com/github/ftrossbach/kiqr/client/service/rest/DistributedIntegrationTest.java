@@ -2,11 +2,13 @@ package com.github.ftrossbach.kiqr.client.service.rest;
 
 import com.github.ftrossbach.kiqr.client.service.BlockingKiqrService;
 import com.github.ftrossbach.kiqr.client.service.QueryExecutionException;
+import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.core.RuntimeVerticle;
 import com.github.ftrossbach.kiqr.rest.server.HttpServer;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
+import io.vertx.core.shareddata.LocalMap;
 import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -150,6 +152,8 @@ public class DistributedIntegrationTest {
         streamProps.put(StreamsConfig.KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         streamProps.put(StreamsConfig.VALUE_SERDE_CLASS_CONFIG, Serdes.Long().getClass().getName());
 
+
+        CountDownLatch streams1 = new CountDownLatch(1);
         Vertx.clusteredVertx(new VertxOptions().setClusterManager(new HazelcastClusterManager()), handler -> {
             if(handler.succeeded()){
                 VERTX = handler.result();
@@ -157,13 +161,34 @@ public class DistributedIntegrationTest {
                 HttpServer.Builder verticleBuilder = new HttpServer.Builder(builder, streamProps);
                 RuntimeVerticle.Builder builder1 = verticleBuilder.withPort(PORT1);
 
+                VERTX.eventBus().localConsumer(Config.CLUSTER_STATE_BROADCAST_ADDRESS, statechange -> {
+                    LocalMap<Object, Object> statemap = VERTX.sharedData().getLocalMap("statemap");
+                    statemap.put("state", statechange.body());
+                    if(!"RUNNING".equals(statechange.body())){
+                        statemap.put("count", 0);
+                    }
+                });
+
+                VERTX.setPeriodic(5000, id -> {
+                    LocalMap<Object, Object> statemap = VERTX.sharedData().getLocalMap("statemap");
+                    if("RUNNING".equals(statemap.get("state"))){
+                        Integer count = Optional.ofNullable((Integer) statemap.get("count")).orElseGet(() -> 0);
+                        if(count >= 2) {
+                            streams1.countDown();
+                        } else {
+                            statemap.put("count", count + 1);
+                        }
+                    }
+
+                });
+
                 AbstractVerticle verticle = verticleBuilder.build();
 
                 VERTX.deployVerticle(verticle);
             }
         });
 
-
+        CountDownLatch streams2 = new CountDownLatch(1);
         Vertx.clusteredVertx(new VertxOptions().setClusterManager(new HazelcastClusterManager()), handler -> {
             if(handler.succeeded()){
                 VERTX2 = handler.result();
@@ -173,12 +198,34 @@ public class DistributedIntegrationTest {
 
                 AbstractVerticle verticle = verticleBuilder.build();
 
+                VERTX2.eventBus().localConsumer(Config.CLUSTER_STATE_BROADCAST_ADDRESS, statechange -> {
+                    LocalMap<Object, Object> statemap = VERTX2.sharedData().getLocalMap("statemap");
+                    statemap.put("state", statechange.body());
+                    if(!"RUNNING".equals(statechange.body())){
+                        statemap.put("count", 0);
+                    }
+                });
+
+                VERTX2.setPeriodic(5000, id -> {
+                    LocalMap<Object, Object> statemap = VERTX2.sharedData().getLocalMap("statemap");
+                    if("RUNNING".equals(statemap.get("state"))){
+                        Integer count = Optional.ofNullable((Integer) statemap.get("count")).orElseGet(() -> 0);
+                        if(count >= 2) {
+                            streams2.countDown();
+                        } else {
+                            statemap.put("count", count + 1);
+                        }
+                    }
+
+                });
+
                 VERTX2.deployVerticle(verticle);
             }
         });
 
-        //wait until cluster has rebalanced - guesstimate. It's not easy to get this right
-        Thread.sleep(30000);
+        //wait until cluster has rebalanced (as heuristically approximated by three successive queries of running
+        streams1.await(100000, TimeUnit.MILLISECONDS);
+        streams2.await(100000, TimeUnit.MILLISECONDS);
 
     }
 
