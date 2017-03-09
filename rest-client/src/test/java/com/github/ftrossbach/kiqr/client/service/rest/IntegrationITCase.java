@@ -2,19 +2,14 @@ package com.github.ftrossbach.kiqr.client.service.rest;
 
 import com.github.ftrossbach.kiqr.client.service.BlockingKiqrService;
 import com.github.ftrossbach.kiqr.client.service.QueryExecutionException;
-import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.core.RuntimeVerticle;
 import com.github.ftrossbach.kiqr.rest.server.HttpServer;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
-import io.vertx.core.shareddata.LocalMap;
-import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.internals.DefaultPartitioner;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
@@ -24,25 +19,18 @@ import org.apache.kafka.streams.kstream.TimeWindows;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-
-import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.*;
 
 
 /**
  * Created by ftr on 08/03/2017.
  */
-@RunWith(Parameterized.class)
-public class DistributedIntegrationTest {
-
-    private static final int PORT1 = 44321;
-    private static final int PORT2 = 44322;
+public class IntegrationITCase {
 
 
     private final static String KAFKA_HOST = "localhost";
@@ -57,21 +45,7 @@ public class DistributedIntegrationTest {
 
     private static String TOPIC = UUID.randomUUID().toString();
 
-    private static Vertx VERTX = null;
-    private static Vertx VERTX2 = null;
-
-
-    @Parameterized.Parameters
-    public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] {
-                { PORT1 }, {PORT2}
-        });
-    }
-
-    private final int port;
-    public DistributedIntegrationTest(int port) {
-        this.port = port;
-    }
+    private static final Vertx VERTX = Vertx.vertx();
 
     @BeforeClass
     public static void produceMessages() throws Exception{
@@ -83,23 +57,23 @@ public class DistributedIntegrationTest {
 
 
         try(KafkaProducer<String, Long> producer = new KafkaProducer<>(producerProps)){
-            producer.send(new ProducerRecord<String, Long>(TOPIC, null, 0L, "key1", 1L));
-            producer.send(new ProducerRecord<String, Long>(TOPIC, null, 100L, "key1", 2L));
-            producer.send(new ProducerRecord<String, Long>(TOPIC, null, 100000L, "key1", 3L));
+            producer.send(new ProducerRecord<String, Long>(TOPIC, 0, 0L, "key1", 1L));
+            producer.send(new ProducerRecord<String, Long>(TOPIC, 0, 100L, "key1", 2L));
+            producer.send(new ProducerRecord<String, Long>(TOPIC, 0, 100000L, "key1", 3L));
 
 
-            producer.send(new ProducerRecord<String, Long>(TOPIC, null, 0L, "key2", 4L));
-            producer.send(new ProducerRecord<String, Long>(TOPIC, null, 100000L, "key2", 5L));
-            producer.send(new ProducerRecord<String, Long>(TOPIC, null, 100001L, "key2", 6L));
+            producer.send(new ProducerRecord<String, Long>(TOPIC, 0, 0L, "key2", 4L));
+            producer.send(new ProducerRecord<String, Long>(TOPIC, 0, 100000L, "key2", 5L));
+            producer.send(new ProducerRecord<String, Long>(TOPIC, 0, 100001L, "key2", 6L));
 
-            producer.send(new ProducerRecord<String, Long>(TOPIC, null, 0L, "key3", 7L));
-            producer.send(new ProducerRecord<String, Long>(TOPIC, null, 50000L, "key3", 8L));
-            producer.send(new ProducerRecord<String, Long>(TOPIC, null, 100001L, "key3", 9L));
+            producer.send(new ProducerRecord<String, Long>(TOPIC, 0, 0L, "key3", 7L));
+            producer.send(new ProducerRecord<String, Long>(TOPIC, 0, 50000L, "key3", 8L));
+            producer.send(new ProducerRecord<String, Long>(TOPIC, 0, 100001L, "key3", 9L));
 
 
-            producer.send(new ProducerRecord<String, Long>(TOPIC, null, 0L, "key4", 10L));
-            producer.send(new ProducerRecord<String, Long>(TOPIC, null, 1L, "key4", 11L));
-            producer.send(new ProducerRecord<String, Long>(TOPIC, null, 2L, "key4", 12L));
+            producer.send(new ProducerRecord<String, Long>(TOPIC, 0, 0L, "key4", 10L));
+            producer.send(new ProducerRecord<String, Long>(TOPIC, 0, 1L, "key4", 11L));
+            producer.send(new ProducerRecord<String, Long>(TOPIC, 0, 2L, "key4", 12L));
 
         }
 
@@ -152,80 +126,20 @@ public class DistributedIntegrationTest {
         streamProps.put(StreamsConfig.KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         streamProps.put(StreamsConfig.VALUE_SERDE_CLASS_CONFIG, Serdes.Long().getClass().getName());
 
+        CountDownLatch streamCdl = new CountDownLatch(2);
 
-        CountDownLatch streams1 = new CountDownLatch(1);
-        Vertx.clusteredVertx(new VertxOptions().setClusterManager(new HazelcastClusterManager()), handler -> {
-            if(handler.succeeded()){
-                VERTX = handler.result();
 
-                HttpServer.Builder verticleBuilder = new HttpServer.Builder(builder, streamProps);
-                RuntimeVerticle.Builder builder1 = verticleBuilder.withPort(PORT1);
-
-                VERTX.eventBus().localConsumer(Config.CLUSTER_STATE_BROADCAST_ADDRESS, statechange -> {
-                    LocalMap<Object, Object> statemap = VERTX.sharedData().getLocalMap("statemap");
-                    statemap.put("state", statechange.body());
-                    if(!"RUNNING".equals(statechange.body())){
-                        statemap.put("count", 0);
-                    }
-                });
-
-                VERTX.setPeriodic(5000, id -> {
-                    LocalMap<Object, Object> statemap = VERTX.sharedData().getLocalMap("statemap");
-                    if("RUNNING".equals(statemap.get("state"))){
-                        Integer count = Optional.ofNullable((Integer) statemap.get("count")).orElseGet(() -> 0);
-                        if(count >= 2) {
-                            streams1.countDown();
-                        } else {
-                            statemap.put("count", count + 1);
-                        }
-                    }
-
-                });
-
-                AbstractVerticle verticle = verticleBuilder.build();
-
-                VERTX.deployVerticle(verticle);
-            }
+        HttpServer.Builder verticleBuilder = new HttpServer.Builder(builder, streamProps);
+        RuntimeVerticle.Builder builder1 = verticleBuilder.withPort(44321).withStateListener((newState, oldState) -> {
+            if (newState == KafkaStreams.State.RUNNING) streamCdl.countDown();
+            System.out.println(oldState + " - " + newState);
         });
 
-        CountDownLatch streams2 = new CountDownLatch(1);
-        Vertx.clusteredVertx(new VertxOptions().setClusterManager(new HazelcastClusterManager()), handler -> {
-            if(handler.succeeded()){
-                VERTX2 = handler.result();
+        AbstractVerticle verticle = verticleBuilder.build();
 
-                HttpServer.Builder verticleBuilder = new HttpServer.Builder(builder, streamProps);
-                RuntimeVerticle.Builder builder1 = verticleBuilder.withPort(PORT2);
+        VERTX.deployVerticle(verticle);
 
-                AbstractVerticle verticle = verticleBuilder.build();
-
-                VERTX2.eventBus().localConsumer(Config.CLUSTER_STATE_BROADCAST_ADDRESS, statechange -> {
-                    LocalMap<Object, Object> statemap = VERTX2.sharedData().getLocalMap("statemap");
-                    statemap.put("state", statechange.body());
-                    if(!"RUNNING".equals(statechange.body())){
-                        statemap.put("count", 0);
-                    }
-                });
-
-                VERTX2.setPeriodic(5000, id -> {
-                    LocalMap<Object, Object> statemap = VERTX2.sharedData().getLocalMap("statemap");
-                    if("RUNNING".equals(statemap.get("state"))){
-                        Integer count = Optional.ofNullable((Integer) statemap.get("count")).orElseGet(() -> 0);
-                        if(count >= 2) {
-                            streams2.countDown();
-                        } else {
-                            statemap.put("count", count + 1);
-                        }
-                    }
-
-                });
-
-                VERTX2.deployVerticle(verticle);
-            }
-        });
-
-        //wait until cluster has rebalanced (as heuristically approximated by three successive queries of running
-        streams1.await(100000, TimeUnit.MILLISECONDS);
-        streams2.await(100000, TimeUnit.MILLISECONDS);
+        streamCdl.await(10000, TimeUnit.MILLISECONDS);
 
     }
 
@@ -234,7 +148,7 @@ public class DistributedIntegrationTest {
 
 
 
-        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", port);
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
 
         Optional<Long> resultKey1 = client.getScalarKeyValue("kv", String.class, "key1", Long.class, Serdes.String(), Serdes.Long());
         assertTrue(resultKey1.isPresent());
@@ -251,7 +165,7 @@ public class DistributedIntegrationTest {
 
 
 
-        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", port);
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
 
         Optional<Long> resultKey1 = client.getScalarKeyValue("kv", String.class, "key5", Long.class, Serdes.String(), Serdes.Long());
         assertFalse(resultKey1.isPresent());
@@ -261,7 +175,7 @@ public class DistributedIntegrationTest {
     @Test
     public void noSuchStoreScalarQuery() throws Exception{
 
-        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", port);
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
 
         Optional<Long> resultKey1 = client.getScalarKeyValue("idontexist", String.class, "key1", Long.class, Serdes.String(), Serdes.Long());
         assertFalse(resultKey1.isPresent());
@@ -271,29 +185,9 @@ public class DistributedIntegrationTest {
     @Test(expected = QueryExecutionException.class)
     public void wrongStoreTypeScalarQuery() throws Exception{
 
-        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", port);
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
 
         Optional<Long> resultKey1 = client.getScalarKeyValue("window", String.class, "key1", Long.class, Serdes.String(), Serdes.Long());
-
-
-    }
-
-    @Test(expected = QueryExecutionException.class)
-    public void wrongKeyClassScalarQuery() throws Exception{
-
-        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", port);
-
-        Optional<Long> resultKey1 = client.getScalarKeyValue("kv", Long.class, 1L, Long.class, Serdes.Long(), Serdes.Long());
-
-
-    }
-
-    @Test(expected = QueryExecutionException.class)
-    public void wrongClassSerdeScalarQuery() throws Exception{
-
-        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", port);
-
-        client.getScalarKeyValue("kv", String.class, "key1", String.class, Serdes.String(), Serdes.String());
 
 
     }
@@ -301,7 +195,7 @@ public class DistributedIntegrationTest {
     @Test
     public void successfulAllQuery() throws Exception{
 
-        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", port);
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
 
         Map<String, Long> result = client.getAllKeyValues("kv", String.class, Long.class, Serdes.String(), Serdes.Long());
         assertThat(result.entrySet(),hasSize(4));
@@ -316,7 +210,7 @@ public class DistributedIntegrationTest {
     @Test
     public void noSuchStoreAllQuery() throws Exception{
 
-        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", port);
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
 
         Map<String, Long> result = client.getAllKeyValues("idontexist", String.class, Long.class, Serdes.String(), Serdes.Long());
         assertTrue(result.isEmpty());
@@ -328,16 +222,17 @@ public class DistributedIntegrationTest {
     @Test(expected = QueryExecutionException.class)
     public void wrongStoreTypeAllQuery() throws Exception{
 
-        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", port);
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
+
         Map<String, Long> result = client.getAllKeyValues("window", String.class, Long.class, Serdes.String(), Serdes.Long());
 
-    }
 
+    }
 
     @Test
     public void successfulRangeQuery() throws Exception{
 
-        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", port);
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
 
         Map<String, Long> result = client.getRangeKeyValues("kv", String.class, Long.class, Serdes.String(), Serdes.Long(), "key1", "key2");
         assertThat(result.entrySet(),hasSize(2));
@@ -349,7 +244,7 @@ public class DistributedIntegrationTest {
     @Test
     public void emptyRangeQuery() throws Exception{
 
-        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", port);
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
 
         Map<String, Long> result = client.getRangeKeyValues("kv", String.class, Long.class, Serdes.String(), Serdes.Long(), "key6", "key7");
         assertThat(result.entrySet(),is(empty()));
@@ -359,7 +254,7 @@ public class DistributedIntegrationTest {
     @Test(expected = QueryExecutionException.class)
     public void invertedRangeQuery() throws Exception{
 
-        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", port);
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
 
         Map<String, Long> result = client.getRangeKeyValues("kv", String.class, Long.class, Serdes.String(), Serdes.Long(), "key3", "key1");
         assertThat(result.entrySet(),is(empty()));
@@ -369,7 +264,7 @@ public class DistributedIntegrationTest {
     @Test
     public void noSuchStoreRangeQuery() throws Exception{
 
-        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", port);
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
 
         Map<String, Long> result = client.getRangeKeyValues("idontexist", String.class, Long.class, Serdes.String(), Serdes.Long(), "key1", "key2");
         assertTrue(result.isEmpty());
@@ -380,7 +275,7 @@ public class DistributedIntegrationTest {
     @Test(expected = QueryExecutionException.class)
     public void wrongStoreTypeRangeQuery() throws Exception{
 
-        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", port);
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
 
         Map<String, Long> result = client.getRangeKeyValues("window", String.class, Long.class, Serdes.String(), Serdes.Long(), "key1", "key2");
 
@@ -391,7 +286,7 @@ public class DistributedIntegrationTest {
     @Test
     public void successfulWindowQuery() throws Exception{
 
-        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", port);
+        BlockingKiqrService client = new BlockingRestKiqrServiceImpl("localhost", 44321);
 
         Map<Long, Long> result = client.getWindow("window", String.class, "key1", Long.class, Serdes.String(), Serdes.Long(), 0L, 100001L);
         assertThat(result.entrySet(),hasSize(2));
@@ -417,10 +312,12 @@ public class DistributedIntegrationTest {
     }
 
     @AfterClass
-    public static void tearDown(){
+    public static void tearDown() throws Exception{
+        CountDownLatch cdl = new CountDownLatch(1);
 
-        VERTX.close();
-        VERTX2.close();
+        VERTX.close(handler -> cdl.countDown());
+
+        cdl.await(30000, TimeUnit.MILLISECONDS);
     }
 
 
