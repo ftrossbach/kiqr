@@ -61,6 +61,11 @@
             <artifactId>kiqr-rest-server</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-hazelcast</artifactId>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 

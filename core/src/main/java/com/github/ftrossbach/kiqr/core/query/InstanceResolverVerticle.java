@@ -52,10 +52,14 @@ public class InstanceResolverVerticle extends AbstractKiqrVerticle {
 
                 Serde<Object> serde = getSerde(config.getKeySerde());
 
+                System.out.println(config.getKey());
+
                 Object deserializedKey = serde.deserializer().deserialize("?", config.getKey());
+
                 StreamsMetadata streamsMetadata = streams.metadataForKey(config.getStoreName(), deserializedKey, serde.serializer());
 
-                System.out.println(streamsMetadata);
+
+
                 if(streamsMetadata != null && streamsMetadata.host() != null){
 
                     msg.reply(new InstanceResolverResponse(Optional.of(streamsMetadata.host())));
