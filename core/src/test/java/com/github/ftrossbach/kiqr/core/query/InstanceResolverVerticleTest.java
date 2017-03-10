@@ -296,6 +296,46 @@ public class InstanceResolverVerticleTest {
 
     }
 
+    @Test
+    public void singleReturnsUnavailableAsHost(TestContext context){
+
+        KafkaStreams streamMock = mock(KafkaStreams.class);
+
+        when(streamMock.metadataForKey(eq("store"), any(), any(Serializer.class))).thenReturn(new StreamsMetadata(new HostInfo("unavailable", -1), Collections.emptySet(), Collections.emptySet()));
+
+        InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
+        rule.vertx().deployVerticle(vut, context.asyncAssertSuccess(deployment -> {
+            InstanceResolverQuery query = new InstanceResolverQuery("store", Serdes.String().getClass().getName(), "key".getBytes());
+            rule.vertx().eventBus().send(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, query, context.asyncAssertFailure( handler -> {
+
+                context.assertTrue(handler instanceof ReplyException);
+                ReplyException ex = (ReplyException) handler;
+                context.assertEquals(503, ex.failureCode());
+
+            }));
+        }));
+
+    }
+
+    @Test
+    public void allReturnsUnavailableAsHost(TestContext context){
+
+        KafkaStreams streamMock = mock(KafkaStreams.class);
+
+        when(streamMock.allMetadataForStore(eq("store"))).thenReturn(Collections.singleton(new StreamsMetadata(new HostInfo("unavailable", -1), Collections.emptySet(), Collections.emptySet())));
+
+        InstanceResolverVerticle vut = new InstanceResolverVerticle(streamMock);
+        rule.vertx().deployVerticle(vut, context.asyncAssertSuccess(deployment -> {
+             rule.vertx().eventBus().send(Config.ALL_INSTANCES, "store", context.asyncAssertFailure( handler -> {
+
+                context.assertTrue(handler instanceof ReplyException);
+                ReplyException ex = (ReplyException) handler;
+                context.assertEquals(503, ex.failureCode());
+
+            }));
+        }));
+
+    }
 
 
 }
