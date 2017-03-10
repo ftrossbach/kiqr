@@ -45,6 +45,7 @@ import java.util.Properties;
 public class RestKiqrServerVerticle extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(RestKiqrServerVerticle.class);
+    public static final int TIMEOUT = 5000;
 
     static String BASE_ROUTE_KV = "/api/v1/kv/:store";
     static String BASE_ROUTE_WINDOW = "/api/v1/window/:store";
@@ -152,7 +153,7 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
 
 
 
-                vertx.eventBus().send(Config.WINDOWED_QUERY_FACADE_ADDRESS, query, new DeliveryOptions().setSendTimeout(5000), reply -> {
+                vertx.eventBus().send(Config.WINDOWED_QUERY_FACADE_ADDRESS, query, new DeliveryOptions().setSendTimeout(TIMEOUT), reply -> {
                     if (reply.succeeded()) {
                         WindowedQueryResponse body = (WindowedQueryResponse) reply.result().body();
 
@@ -188,7 +189,7 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
                 ScalarKeyValueQuery query = new ScalarKeyValueQuery(store, keySerde, key, valueSerde);
 
 
-                vertx.eventBus().send(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, query, new DeliveryOptions().setSendTimeout(5000), reply -> {
+                vertx.eventBus().send(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, query, new DeliveryOptions().setSendTimeout(TIMEOUT), reply -> {
                     if(reply.succeeded()){
                         ScalarKeyValueQueryResponse body = (ScalarKeyValueQueryResponse) reply.result().body();
                         HttpServerResponse response = routingContext.response();
@@ -248,7 +249,7 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
 
                 }
 
-                vertx.eventBus().send(address, query, new DeliveryOptions().setSendTimeout(5000), reply -> {
+                vertx.eventBus().send(address, query, new DeliveryOptions().setSendTimeout(TIMEOUT), reply -> {
                     if (reply.succeeded()) {
                         MultiValuedKeyValueQueryResponse body = (MultiValuedKeyValueQueryResponse) reply.result().body();
 
