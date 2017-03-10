@@ -104,8 +104,6 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
 
         Future serverListener = Future.future();
 
-        runtimeVerticleCompleter.setHandler(handler -> System.out.println("hurz"));
-
         vertx
                 .createHttpServer(serverOptions)
                 .requestHandler(router::accept)
@@ -116,11 +114,12 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
            if(handler.succeeded()){
                fut.complete();
            } else {
-               handler.cause().printStackTrace();
                fut.fail(handler.cause());
            }
         });
     }
+
+
 
     private void addRouteForWindowQueries(Router router) {
         router.route(RestKiqrServerVerticle.BASE_ROUTE_WINDOW + "/:key").handler(routingContext -> {

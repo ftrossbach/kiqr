@@ -52,8 +52,6 @@ public class InstanceResolverVerticle extends AbstractKiqrVerticle {
 
                 Serde<Object> serde = getSerde(config.getKeySerde());
 
-                System.out.println(config.getKey());
-
                 Object deserializedKey = serde.deserializer().deserialize("?", config.getKey());
 
                 StreamsMetadata streamsMetadata = streams.metadataForKey(config.getStoreName(), deserializedKey, serde.serializer());
@@ -62,7 +60,13 @@ public class InstanceResolverVerticle extends AbstractKiqrVerticle {
 
                 if(streamsMetadata != null && streamsMetadata.host() != null){
 
-                    msg.reply(new InstanceResolverResponse(Optional.of(streamsMetadata.host())));
+                    if("unavailable".equals(streamsMetadata.host())){
+                        msg.fail(503, "Streaming application currently unavailable");
+                    } else {
+                        msg.reply(new InstanceResolverResponse(Optional.of(streamsMetadata.host())));
+                    }
+
+
                 } else {
                     msg.fail(404, "No instance for store found: " + config.getStoreName());
                 }

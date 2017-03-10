@@ -1,7 +1,6 @@
 package com.github.ftrossbach.kiqr.client.service.rest;
 
 import com.github.ftrossbach.kiqr.client.service.GenericBlockingKiqrClient;
-import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.junit.Before;
 import org.junit.Test;
