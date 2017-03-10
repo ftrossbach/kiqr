@@ -22,6 +22,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.http.HttpServerOptions;
@@ -132,7 +133,6 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
     private void addRouteForWindowQueries(Router router) {
         router.route(RestKiqrServerVerticle.BASE_ROUTE_WINDOW + "/:key").handler(routingContext -> {
 
-
             HttpServerRequest request = routingContext.request();
 
             String keySerde = request.getParam("keySerde");
@@ -152,7 +152,7 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
 
 
 
-                vertx.eventBus().send(Config.WINDOWED_QUERY_FACADE_ADDRESS, query, reply -> {
+                vertx.eventBus().send(Config.WINDOWED_QUERY_FACADE_ADDRESS, query, new DeliveryOptions().setSendTimeout(5000), reply -> {
                     if (reply.succeeded()) {
                         WindowedQueryResponse body = (WindowedQueryResponse) reply.result().body();
 
@@ -188,7 +188,7 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
                 ScalarKeyValueQuery query = new ScalarKeyValueQuery(store, keySerde, key, valueSerde);
 
 
-                vertx.eventBus().send(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, query, reply -> {
+                vertx.eventBus().send(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, query, new DeliveryOptions().setSendTimeout(5000), reply -> {
                     if(reply.succeeded()){
                         ScalarKeyValueQueryResponse body = (ScalarKeyValueQueryResponse) reply.result().body();
                         HttpServerResponse response = routingContext.response();
@@ -248,7 +248,7 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
 
                 }
 
-                vertx.eventBus().send(address, query, reply -> {
+                vertx.eventBus().send(address, query, new DeliveryOptions().setSendTimeout(5000), reply -> {
                     if (reply.succeeded()) {
                         MultiValuedKeyValueQueryResponse body = (MultiValuedKeyValueQueryResponse) reply.result().body();
 
