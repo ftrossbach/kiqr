@@ -29,6 +29,8 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
@@ -40,6 +42,8 @@ import java.util.Properties;
  * Created by ftr on 28/02/2017.
  */
 public class RestKiqrServerVerticle extends AbstractVerticle {
+
+    private static final Logger LOG = LoggerFactory.getLogger(RestKiqrServerVerticle.class);
 
     static String BASE_ROUTE_KV = "/api/v1/kv/:store";
     static String BASE_ROUTE_WINDOW = "/api/v1/window/:store";
@@ -91,6 +95,7 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
     @Override
     public void start(Future<Void> fut) throws Exception {
 
+        LOG.info("Starting KafkaStreams and Webserver");
         Future runtimeVerticleCompleter = Future.future();
         vertx.deployVerticle(runtimeVerticle, runtimeVerticleCompleter.completer());
 
@@ -104,16 +109,19 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
 
         Future serverListener = Future.future();
 
-        vertx
+        int port = vertx
                 .createHttpServer(serverOptions)
                 .requestHandler(router::accept)
-                .listen(serverListener.completer());
+                .listen(serverListener.completer())
+                .actualPort();
 
 
         CompositeFuture.all(runtimeVerticleCompleter, serverListener).setHandler(handler ->{
            if(handler.succeeded()){
+               LOG.info("Started KafkaStreams and Webserver, listening on port " + port);
                fut.complete();
            } else {
+               LOG.error("Failure during startup", handler.cause());
                fut.fail(handler.cause());
            }
         });

@@ -35,6 +35,8 @@ import io.vertx.core.Future;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.Json;
 
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
@@ -48,6 +50,8 @@ import java.util.stream.Stream;
  * Created by ftr on 18/02/2017.
  */
 public class RuntimeVerticle extends AbstractVerticle {
+
+    private static final Logger LOG = LoggerFactory.getLogger(RuntimeVerticle.class);
 
     public static class Builder<T extends Builder> {
 
@@ -148,6 +152,7 @@ public class RuntimeVerticle extends AbstractVerticle {
         String instanceId = UUID.randomUUID().toString();
         vertx.<KafkaStreams>executeBlocking(future -> {
 
+            LOG.info("Starting KafkaStreams with application.server set to " + instanceId);
             //starting streams can take a while, therefore we do it asynchronously
             props.put(StreamsConfig.APPLICATION_SERVER_CONFIG, instanceId + ":124");
             KafkaStreams streams = createAndStartStream();
@@ -156,6 +161,7 @@ public class RuntimeVerticle extends AbstractVerticle {
         }, res -> {
 
             if (res.succeeded()) {
+                LOG.info("Started KafkaStreams, deploying query verticles");
                 Future deployFuture = deployVerticles(new InstanceResolverVerticle(res.result()), new KeyValueQueryVerticle(instanceId, res.result()),
                         new AllKeyValuesQueryVerticle(instanceId, res.result()), new RangeKeyValueQueryVerticle(instanceId, res.result()),
                         new WindowedQueryVerticle(instanceId, res.result()), new AllKeyValueQueryFacadeVerticle(),
@@ -167,13 +173,16 @@ public class RuntimeVerticle extends AbstractVerticle {
 
                     AsyncResult ar = (AsyncResult) handler;
                     if (ar.succeeded()) {
+                        LOG.info("Deployed query verticles");
                         startFuture.complete();
                     } else {
+                        LOG.error("Deploying query verticles failed", ar);
                         startFuture.fail(ar.cause());
                     }
                 });
 
             } else {
+                LOG.error("Starting KafkaStreams failed", res.cause());
                 startFuture.fail(res.cause());
             }
 
@@ -241,6 +250,7 @@ public class RuntimeVerticle extends AbstractVerticle {
     public void stop(Future<Void> stopFuture) throws Exception {
         vertx.<Void>executeBlocking(future -> {
 
+            LOG.info("Shutting down KafkaStreams");
            streams.close();
            future.complete();
 
