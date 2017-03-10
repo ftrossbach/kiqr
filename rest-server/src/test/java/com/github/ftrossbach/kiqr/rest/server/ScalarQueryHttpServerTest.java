@@ -49,7 +49,7 @@ public class ScalarQueryHttpServerTest {
         rule.vertx().eventBus().registerDefaultCodec(ScalarKeyValueQueryResponse.class, new KiqrCodec(ScalarKeyValueQueryResponse.class));
 
 
-        rule.vertx().deployVerticle(new HttpServer(new HttpServerOptions().setPort(5762), new DummySuccessfulVerticle()), context.asyncAssertSuccess());
+        rule.vertx().deployVerticle(new RestKiqrServerVerticle(new HttpServerOptions().setPort(5762), new DummySuccessfulVerticle()), context.asyncAssertSuccess());
     }
 
 

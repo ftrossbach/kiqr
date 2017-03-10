@@ -15,8 +15,8 @@
  */
 package com.github.ftrossbach.kiqr.examples;
 
-import com.github.ftrossbach.kiqr.client.service.BlockingKiqrService;
-import com.github.ftrossbach.kiqr.client.service.rest.BlockingRestKiqrServiceImpl;
+import com.github.ftrossbach.kiqr.client.service.GenericBlockingKiqrClient;
+import com.github.ftrossbach.kiqr.client.service.rest.GenericBlockingRestKiqrClientImpl;
 import org.apache.kafka.common.serialization.Serdes;
 
 import java.time.Instant;
@@ -30,7 +30,7 @@ import java.util.Map;
 public class RestClient {
 
     public static void main(String[] args) {
-        BlockingKiqrService service = new BlockingRestKiqrServiceImpl("localhost", 2901);
+        GenericBlockingKiqrClient service = new GenericBlockingRestKiqrClientImpl("localhost", 2901);
 
         System.out.println(service.getScalarKeyValue("visitStore", String.class, "127.0.0.1", Long.class, Serdes.String(), Serdes.Long()));
 

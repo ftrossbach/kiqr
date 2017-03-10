@@ -21,7 +21,6 @@ import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQueryResponse;
 import com.github.ftrossbach.kiqr.core.query.KiqrCodec;
-import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -41,7 +40,7 @@ import java.util.Optional;
 @RunWith(VertxUnitRunner.class)
 public class ScalarKVQueryBlockingRestKiqrServiceImplTest {
 
-    BlockingRestKiqrServiceImpl unitUnderTest = new BlockingRestKiqrServiceImpl("localhost", 4567);
+    GenericBlockingRestKiqrClientImpl unitUnderTest = new GenericBlockingRestKiqrClientImpl("localhost", 4567);
 
     @Rule
     public final RunTestOnContext rule = new RunTestOnContext();
@@ -178,7 +177,7 @@ public class ScalarKVQueryBlockingRestKiqrServiceImplTest {
 
             rule.vertx().<Void>executeBlocking(future -> {
 
-                unitUnderTest = new BlockingRestKiqrServiceImpl("localhost", -1);
+                unitUnderTest = new GenericBlockingRestKiqrClientImpl("localhost", -1);
                 Optional<Long> scalarKeyValue = unitUnderTest.getScalarKeyValue("store", String.class, "key", Long.class, Serdes.String(), Serdes.Long());
                 context.fail();
 
@@ -201,7 +200,7 @@ public class ScalarKVQueryBlockingRestKiqrServiceImplTest {
 
             rule.vertx().<Void>executeBlocking(future -> {
 
-                unitUnderTest = new BlockingRestKiqrServiceImpl("host with spaces", 4567);
+                unitUnderTest = new GenericBlockingRestKiqrClientImpl("host with spaces", 4567);
                 Optional<Long> scalarKeyValue = unitUnderTest.getScalarKeyValue("store", String.class, "key", Long.class, Serdes.String(), Serdes.Long());
                 context.fail();
 
@@ -224,7 +223,7 @@ public class ScalarKVQueryBlockingRestKiqrServiceImplTest {
 
             rule.vertx().<Void>executeBlocking(future -> {
 
-                unitUnderTest = new BlockingRestKiqrServiceImpl("ihopethisdoesntexist", 4567);
+                unitUnderTest = new GenericBlockingRestKiqrClientImpl("ihopethisdoesntexist", 4567);
                 Optional<Long> scalarKeyValue = unitUnderTest.getScalarKeyValue("store", String.class, "key", Long.class, Serdes.String(), Serdes.Long());
                 context.fail();
 

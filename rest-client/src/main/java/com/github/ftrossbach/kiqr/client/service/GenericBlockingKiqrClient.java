@@ -23,7 +23,7 @@ import java.util.Optional;
 /**
  * Created by ftr on 01/03/2017.
  */
-public interface BlockingKiqrService {
+public interface GenericBlockingKiqrClient {
 
     <K,V > Optional<V> getScalarKeyValue(String store, Class<K> keyClass, K key, Class<V> valueClass, Serde<K> keySerde,Serde<V> valueSerde);
 

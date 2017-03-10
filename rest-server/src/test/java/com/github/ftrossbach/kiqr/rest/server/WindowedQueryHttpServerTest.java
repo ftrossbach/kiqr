@@ -50,7 +50,7 @@ public class WindowedQueryHttpServerTest {
         rule.vertx().eventBus().registerDefaultCodec(WindowedQuery.class, new KiqrCodec(WindowedQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(WindowedQueryResponse.class, new KiqrCodec<>(WindowedQueryResponse.class));
 
-        rule.vertx().deployVerticle(new HttpServer(new HttpServerOptions().setPort(5762), new DummySuccessfulVerticle()), context.asyncAssertSuccess());
+        rule.vertx().deployVerticle(new RestKiqrServerVerticle(new HttpServerOptions().setPort(5762), new DummySuccessfulVerticle()), context.asyncAssertSuccess());
     }
 
 

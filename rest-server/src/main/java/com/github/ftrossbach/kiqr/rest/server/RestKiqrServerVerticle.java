@@ -39,30 +39,36 @@ import java.util.Properties;
 /**
  * Created by ftr on 28/02/2017.
  */
-public class HttpServer extends AbstractVerticle {
+public class RestKiqrServerVerticle extends AbstractVerticle {
 
     static String BASE_ROUTE_KV = "/api/v1/kv/:store";
     static String BASE_ROUTE_WINDOW = "/api/v1/window/:store";
 
-    public static class Builder extends RuntimeVerticle.Builder{
-
+    public static class Builder extends RuntimeVerticle.Builder<RestKiqrServerVerticle.Builder>{
 
         private HttpServerOptions httpServerOptions;
 
-        public Builder(KStreamBuilder builder) {
+        public static Builder serverBuilder(KStreamBuilder builder){
+            return new Builder(builder);
+        }
+
+        public static Builder serverBuilder(KStreamBuilder builder, Properties props){
+            return new Builder(builder, props);
+        }
+        protected Builder(KStreamBuilder builder) {
             super(builder);
         }
 
-        public Builder(KStreamBuilder builder, Properties properties) {
+        protected Builder(KStreamBuilder builder, Properties properties) {
             super(builder, properties);
         }
 
-        public HttpServer.Builder withOptions(HttpServerOptions options) {
+        public Builder withOptions(HttpServerOptions options) {
             this.httpServerOptions = options;
             return this;
         }
 
-        public HttpServer.Builder withPort(int port) {
+        public Builder withPort(int port) {
             this.httpServerOptions = new HttpServerOptions().setPort(port);
             return this;
         }
@@ -70,14 +76,14 @@ public class HttpServer extends AbstractVerticle {
         @Override
         public AbstractVerticle build() {
             AbstractVerticle runtimeVerticle = super.build();
-            return new HttpServer(httpServerOptions != null ? httpServerOptions : new HttpServerOptions(), runtimeVerticle);
+            return new RestKiqrServerVerticle(httpServerOptions != null ? httpServerOptions : new HttpServerOptions(), runtimeVerticle);
         }
     }
 
     protected final HttpServerOptions serverOptions;
     protected final AbstractVerticle runtimeVerticle;
 
-    protected HttpServer(HttpServerOptions serverOptions, AbstractVerticle runtimeVerticle) {
+    protected RestKiqrServerVerticle(HttpServerOptions serverOptions, AbstractVerticle runtimeVerticle) {
         this.serverOptions = serverOptions;
         this.runtimeVerticle = runtimeVerticle;
     }
@@ -98,6 +104,8 @@ public class HttpServer extends AbstractVerticle {
 
         Future serverListener = Future.future();
 
+        runtimeVerticleCompleter.setHandler(handler -> System.out.println("hurz"));
+
         vertx
                 .createHttpServer(serverOptions)
                 .requestHandler(router::accept)
@@ -108,13 +116,14 @@ public class HttpServer extends AbstractVerticle {
            if(handler.succeeded()){
                fut.complete();
            } else {
+               handler.cause().printStackTrace();
                fut.fail(handler.cause());
            }
         });
     }
 
     private void addRouteForWindowQueries(Router router) {
-        router.route(HttpServer.BASE_ROUTE_WINDOW + "/:key").handler(routingContext -> {
+        router.route(RestKiqrServerVerticle.BASE_ROUTE_WINDOW + "/:key").handler(routingContext -> {
 
 
             HttpServerRequest request = routingContext.request();
@@ -156,7 +165,7 @@ public class HttpServer extends AbstractVerticle {
     }
 
     private void addRouteForScalarKVQueries(Router router) {
-        router.route(HttpServer.BASE_ROUTE_KV + "/:key").handler(routingContext -> {
+        router.route(RestKiqrServerVerticle.BASE_ROUTE_KV + "/:key").handler(routingContext -> {
 
 
             HttpServerRequest request = routingContext.request();
@@ -202,7 +211,7 @@ public class HttpServer extends AbstractVerticle {
     }
 
     private void addRouteForMultiValuedKVQueries(Router router) {
-        router.route(HttpServer.BASE_ROUTE_KV).handler(routingContext -> {
+        router.route(RestKiqrServerVerticle.BASE_ROUTE_KV).handler(routingContext -> {
 
 
             HttpServerRequest request = routingContext.request();

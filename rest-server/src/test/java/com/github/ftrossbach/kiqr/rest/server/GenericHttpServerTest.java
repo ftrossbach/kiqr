@@ -40,29 +40,29 @@ public class GenericHttpServerTest {
 
     @Test
     public void deploymentFailure(TestContext context){
-        rule.vertx().deployVerticle(new HttpServer(new HttpServerOptions().setPort(5762), new DummyFailingVerticle()), context.asyncAssertFailure());
+        rule.vertx().deployVerticle(new RestKiqrServerVerticle(new HttpServerOptions().setPort(5762), new DummyFailingVerticle()), context.asyncAssertFailure());
     }
 
     @Test
     public void builderWithConfig(){
-        HttpServer.Builder builder = new HttpServer.Builder(new KStreamBuilder(), new Properties());
+        RestKiqrServerVerticle.Builder builder = RestKiqrServerVerticle.Builder.serverBuilder(new KStreamBuilder(), new Properties());
 
         AbstractVerticle serverVerticle = builder.withOptions(new HttpServerOptions().setPort(4711)).build();
-        assertThat(serverVerticle, is(instanceOf(HttpServer.class)));
+        assertThat(serverVerticle, is(instanceOf(RestKiqrServerVerticle.class)));
 
-        HttpServer server = (HttpServer) serverVerticle;
+        RestKiqrServerVerticle server = (RestKiqrServerVerticle) serverVerticle;
         assertThat(server.serverOptions.getPort(), is(equalTo(4711)));
 
     }
 
     @Test
     public void builderWithPort(){
-        HttpServer.Builder builder = new HttpServer.Builder(new KStreamBuilder(), new Properties());
+        RestKiqrServerVerticle.Builder builder = RestKiqrServerVerticle.Builder.serverBuilder(new KStreamBuilder(), new Properties());
 
         AbstractVerticle serverVerticle = builder.withPort(4711).build();
-        assertThat(serverVerticle, is(instanceOf(HttpServer.class)));
+        assertThat(serverVerticle, is(instanceOf(RestKiqrServerVerticle.class)));
 
-        HttpServer server = (HttpServer) serverVerticle;
+        RestKiqrServerVerticle server = (RestKiqrServerVerticle) serverVerticle;
         assertThat(server.serverOptions.getPort(), is(equalTo(4711)));
 
     }

@@ -18,8 +18,6 @@ package com.github.ftrossbach.kiqr.client.service.rest;
 import com.github.ftrossbach.kiqr.client.service.ConnectionException;
 import com.github.ftrossbach.kiqr.client.service.QueryExecutionException;
 import com.github.ftrossbach.kiqr.commons.config.Config;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.MultiValuedKeyValueQueryResponse;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.RangeKeyValueQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.WindowedQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.WindowedQueryResponse;
 import com.github.ftrossbach.kiqr.core.query.KiqrCodec;
@@ -42,7 +40,7 @@ import java.util.*;
 @RunWith(VertxUnitRunner.class)
 public class WindowQueryBlockingRestKiqrServiceImplTest {
 
-    BlockingRestKiqrServiceImpl unitUnderTest = new BlockingRestKiqrServiceImpl("localhost", 4567);
+    GenericBlockingRestKiqrClientImpl unitUnderTest = new GenericBlockingRestKiqrClientImpl("localhost", 4567);
 
     @Rule
     public final RunTestOnContext rule = new RunTestOnContext();
@@ -190,7 +188,7 @@ public class WindowQueryBlockingRestKiqrServiceImplTest {
 
             rule.vertx().<Void>executeBlocking(future -> {
 
-                unitUnderTest = new BlockingRestKiqrServiceImpl("localhost", -1);
+                unitUnderTest = new GenericBlockingRestKiqrClientImpl("localhost", -1);
 
                 Map<Long, Long> result = unitUnderTest.getWindow("store", String.class, "key", Long.class, Serdes.String(), Serdes.Long(), 1L, 2L);
                 context.fail();
@@ -213,7 +211,7 @@ public class WindowQueryBlockingRestKiqrServiceImplTest {
 
             rule.vertx().<Void>executeBlocking(future -> {
 
-                unitUnderTest = new BlockingRestKiqrServiceImpl("host with spaces", 4567);
+                unitUnderTest = new GenericBlockingRestKiqrClientImpl("host with spaces", 4567);
 
                 Map<Long, Long> result = unitUnderTest.getWindow("store", String.class, "key", Long.class, Serdes.String(), Serdes.Long(), 1L, 2L);
                 context.fail();
@@ -236,7 +234,7 @@ public class WindowQueryBlockingRestKiqrServiceImplTest {
 
             rule.vertx().<Void>executeBlocking(future -> {
 
-                unitUnderTest = new BlockingRestKiqrServiceImpl("ihopethisdoesntexist", 4567);
+                unitUnderTest = new GenericBlockingRestKiqrClientImpl("ihopethisdoesntexist", 4567);
                 Map<Long, Long> result = unitUnderTest.getWindow("store", String.class, "key", Long.class, Serdes.String(), Serdes.Long(), 1L, 2L);
                 context.fail();
 

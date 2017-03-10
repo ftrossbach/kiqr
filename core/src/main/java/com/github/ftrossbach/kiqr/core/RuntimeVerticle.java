@@ -49,69 +49,74 @@ import java.util.stream.Stream;
  */
 public class RuntimeVerticle extends AbstractVerticle {
 
-    public static class Builder {
+    public static class Builder<T extends Builder> {
 
         private final KStreamBuilder builder;
         private final Properties properties;
         private KafkaStreams.StateListener listener;
 
-        public Builder(KStreamBuilder builder) {
+        public static Builder<Builder> builder(KStreamBuilder builder){
+            return new Builder<>(builder);
+        }
+
+        public static Builder<Builder> builder(KStreamBuilder builder, Properties props){
+            return new Builder<>(builder, props);
+        }
+
+        protected Builder(KStreamBuilder builder) {
             this.builder = builder;
             properties = new Properties();
         }
 
-        public Builder(KStreamBuilder builder, Properties properties) {
+        protected Builder(KStreamBuilder builder, Properties properties) {
             this.builder = builder;
             this.properties = properties;
         }
 
-        public Builder withApplicationId(String applicationId) {
+        public T withApplicationId(String applicationId) {
             properties.put(StreamsConfig.APPLICATION_ID_CONFIG, applicationId);
-            return this;
+            return (T) this;
         }
 
-        public Builder withBootstrapServers(String servers) {
+        public T withBootstrapServers(String servers) {
             properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, servers);
-            return this;
+            return (T) this;
         }
 
-        public Builder withBuffering(Integer buffer) {
+        public T withBuffering(Integer buffer) {
             properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, buffer);
-            return this;
+            return (T) this;
         }
 
-        public Builder withoutBuffering() {
+        public T withoutBuffering() {
             properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
-            return this;
+            return (T) this;
         }
 
-        public Builder withKeySerde(Serde<?> serde) {
+        public T withKeySerde(Serde<?> serde) {
             properties.put(StreamsConfig.KEY_SERDE_CLASS_CONFIG, serde.getClass().getName());
-            return this;
+            return (T) this;
         }
 
-        public Builder withKeySerde(Class<? extends Serde> serdeClass) {
+        public T withKeySerde(Class<? extends Serde> serdeClass) {
             properties.put(StreamsConfig.KEY_SERDE_CLASS_CONFIG, serdeClass.getName());
-            return this;
+            return (T) this;
         }
 
-        public Builder withValueSerde(Serde<?> serde) {
+        public T withValueSerde(Serde<?> serde) {
             properties.put(StreamsConfig.VALUE_SERDE_CLASS_CONFIG, serde.getClass().getName());
-            return this;
+            return (T) this;
         }
 
-        public Builder withValueSerde(Class<? extends Serde> serdeClass) {
+        public T withValueSerde(Class<? extends Serde> serdeClass) {
             properties.put(StreamsConfig.VALUE_SERDE_CLASS_CONFIG, serdeClass.getName());
-            return this;
+            return (T) this;
         }
 
-        public Builder withStateListener(KafkaStreams.StateListener listener){
+        public T withStateListener(KafkaStreams.StateListener listener){
             this.listener = listener;
-            return this;
+            return (T) this;
         }
-
-
-
 
         public AbstractVerticle build() {
 
@@ -151,7 +156,6 @@ public class RuntimeVerticle extends AbstractVerticle {
         }, res -> {
 
             if (res.succeeded()) {
-
                 Future deployFuture = deployVerticles(new InstanceResolverVerticle(res.result()), new KeyValueQueryVerticle(instanceId, res.result()),
                         new AllKeyValuesQueryVerticle(instanceId, res.result()), new RangeKeyValueQueryVerticle(instanceId, res.result()),
                         new WindowedQueryVerticle(instanceId, res.result()), new AllKeyValueQueryFacadeVerticle(),
@@ -160,6 +164,7 @@ public class RuntimeVerticle extends AbstractVerticle {
 
 
                 deployFuture.setHandler(handler -> {
+
                     AsyncResult ar = (AsyncResult) handler;
                     if (ar.succeeded()) {
                         startFuture.complete();
@@ -167,7 +172,6 @@ public class RuntimeVerticle extends AbstractVerticle {
                         startFuture.fail(ar.cause());
                     }
                 });
-
 
             } else {
                 startFuture.fail(res.cause());

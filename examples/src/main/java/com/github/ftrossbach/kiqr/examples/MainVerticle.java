@@ -15,7 +15,7 @@
  */
 package com.github.ftrossbach.kiqr.examples;
 
-import com.github.ftrossbach.kiqr.rest.server.HttpServer;
+import com.github.ftrossbach.kiqr.rest.server.RestKiqrServerVerticle;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import org.apache.kafka.common.serialization.Serdes;
@@ -48,7 +48,7 @@ public class MainVerticle extends AbstractVerticle {
 
 
 
-        vertx.deployVerticle(new HttpServer.Builder(builder, props).withPort(2901).build(), res -> {
+        vertx.deployVerticle(RestKiqrServerVerticle.Builder.serverBuilder(builder, props).withPort(2901).build(), res -> {
             if (res.succeeded()) {
                 startFuture.complete();
             } else {

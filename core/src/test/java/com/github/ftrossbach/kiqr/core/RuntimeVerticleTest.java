@@ -77,7 +77,7 @@ public class RuntimeVerticleTest {
     @Test
     public void builderApplicationId(){
 
-        RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
+        RuntimeVerticle.Builder builder = RuntimeVerticle.Builder.builder(new KStreamBuilder(), new Properties());
 
         builder.withApplicationId("test");
         RuntimeVerticle verticle = (RuntimeVerticle) builder.build();
@@ -90,7 +90,7 @@ public class RuntimeVerticleTest {
     @Test
     public void builderBootstrapServer(){
 
-        RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
+        RuntimeVerticle.Builder builder = RuntimeVerticle.Builder.builder(new KStreamBuilder(), new Properties());
 
         builder.withBootstrapServers("localhost:123");
         RuntimeVerticle verticle = (RuntimeVerticle) builder.build();
@@ -103,7 +103,7 @@ public class RuntimeVerticleTest {
     @Test
     public void builderWithCaching(){
 
-        RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
+        RuntimeVerticle.Builder builder = RuntimeVerticle.Builder.builder(new KStreamBuilder(), new Properties());
 
         builder.withBuffering(42);
         RuntimeVerticle verticle = (RuntimeVerticle) builder.build();
@@ -116,7 +116,7 @@ public class RuntimeVerticleTest {
     @Test
     public void builderWithoutCaching(){
 
-        RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
+        RuntimeVerticle.Builder builder = RuntimeVerticle.Builder.builder(new KStreamBuilder(), new Properties());
 
         builder.withoutBuffering();
         RuntimeVerticle verticle = (RuntimeVerticle) builder.build();
@@ -129,7 +129,7 @@ public class RuntimeVerticleTest {
     @Test
     public void builderWithKeySerdeString(){
 
-        RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
+        RuntimeVerticle.Builder builder = RuntimeVerticle.Builder.builder(new KStreamBuilder(), new Properties());
 
         builder.withKeySerde(Serdes.String());
         RuntimeVerticle verticle = (RuntimeVerticle) builder.build();
@@ -142,7 +142,7 @@ public class RuntimeVerticleTest {
     @Test
     public void builderWithKeySerdeClass(){
 
-        RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
+        RuntimeVerticle.Builder builder = RuntimeVerticle.Builder.builder(new KStreamBuilder(), new Properties());
 
         builder.withKeySerde(Serdes.String().getClass());
         RuntimeVerticle verticle = (RuntimeVerticle) builder.build();
@@ -155,7 +155,7 @@ public class RuntimeVerticleTest {
     @Test
     public void builderWithValueSerdeString(){
 
-        RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
+        RuntimeVerticle.Builder builder = RuntimeVerticle.Builder.builder(new KStreamBuilder(), new Properties());
 
         builder.withValueSerde(Serdes.String());
         RuntimeVerticle verticle = (RuntimeVerticle) builder.build();
@@ -168,7 +168,7 @@ public class RuntimeVerticleTest {
     @Test
     public void builderWithValueSerdeClass(){
 
-        RuntimeVerticle.Builder builder = new RuntimeVerticle.Builder(new KStreamBuilder(), new Properties());
+        RuntimeVerticle.Builder builder = RuntimeVerticle.Builder.builder(new KStreamBuilder(), new Properties());
 
         builder.withValueSerde(Serdes.String().getClass());
         RuntimeVerticle verticle = (RuntimeVerticle) builder.build();

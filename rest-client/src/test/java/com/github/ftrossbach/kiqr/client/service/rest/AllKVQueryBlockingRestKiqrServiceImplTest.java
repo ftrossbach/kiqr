@@ -20,7 +20,6 @@ import com.github.ftrossbach.kiqr.client.service.QueryExecutionException;
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.AllKeyValuesQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.MultiValuedKeyValueQueryResponse;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQueryResponse;
 import com.github.ftrossbach.kiqr.core.query.KiqrCodec;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.unit.Async;
@@ -35,7 +34,6 @@ import org.junit.runner.RunWith;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Created by ftr on 07/03/2017.
@@ -43,7 +41,7 @@ import java.util.Optional;
 @RunWith(VertxUnitRunner.class)
 public class AllKVQueryBlockingRestKiqrServiceImplTest {
 
-    BlockingRestKiqrServiceImpl unitUnderTest = new BlockingRestKiqrServiceImpl("localhost", 4567);
+    GenericBlockingRestKiqrClientImpl unitUnderTest = new GenericBlockingRestKiqrClientImpl("localhost", 4567);
 
     @Rule
     public final RunTestOnContext rule = new RunTestOnContext();
@@ -192,7 +190,7 @@ public class AllKVQueryBlockingRestKiqrServiceImplTest {
 
             rule.vertx().<Void>executeBlocking(future -> {
 
-                unitUnderTest = new BlockingRestKiqrServiceImpl("localhost", -1);
+                unitUnderTest = new GenericBlockingRestKiqrClientImpl("localhost", -1);
                 Map<String, Long> result = unitUnderTest.getAllKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long());
 
                 context.fail();
@@ -215,7 +213,7 @@ public class AllKVQueryBlockingRestKiqrServiceImplTest {
 
             rule.vertx().<Void>executeBlocking(future -> {
 
-                unitUnderTest = new BlockingRestKiqrServiceImpl("host with spaces", 4567);
+                unitUnderTest = new GenericBlockingRestKiqrClientImpl("host with spaces", 4567);
                 Map<String, Long> result = unitUnderTest.getAllKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long());
 
                 context.fail();
@@ -238,7 +236,7 @@ public class AllKVQueryBlockingRestKiqrServiceImplTest {
 
             rule.vertx().<Void>executeBlocking(future -> {
 
-                unitUnderTest = new BlockingRestKiqrServiceImpl("ihopethisdoesntexist", 4567);
+                unitUnderTest = new GenericBlockingRestKiqrClientImpl("ihopethisdoesntexist", 4567);
                 Map<String, Long> result = unitUnderTest.getAllKeyValues("store", String.class, Long.class, Serdes.String(), Serdes.Long());
                 context.fail();
 

@@ -16,14 +16,14 @@
 package com.github.ftrossbach.kiqr.client.service.rest;
 
 
-import com.github.ftrossbach.kiqr.rest.server.HttpServer;
+import com.github.ftrossbach.kiqr.rest.server.RestKiqrServerVerticle;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpServerOptions;
 
 /**
  * Created by ftr on 07/03/2017.
  */
-public class MockedRuntimeHttpServerVerticle extends HttpServer {
+public class MockedRuntimeHttpServerVerticle extends RestKiqrServerVerticle {
     public MockedRuntimeHttpServerVerticle(HttpServerOptions serverOptions, AbstractVerticle runtimeVerticle) {
         super(serverOptions, runtimeVerticle);
     }
