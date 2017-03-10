@@ -20,8 +20,15 @@ package com.github.ftrossbach.kiqr.core.query.exceptions;
  */
 public class SerdeNotFoundException extends RuntimeException{
 
-    public SerdeNotFoundException(String message) {
-        super(message);
+    private final String serde;
+
+    public SerdeNotFoundException(String serde, Throwable cause) {
+        super("Serde not instantiable: " + serde, cause);
+        this.serde = serde;
+    }
+
+    public String getSerde() {
+        return serde;
     }
 
 }

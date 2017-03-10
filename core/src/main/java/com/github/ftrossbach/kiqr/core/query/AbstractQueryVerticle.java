@@ -21,6 +21,8 @@ import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.AllKeyValue
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.MultiValuedKeyValueQueryResponse;
 import com.github.ftrossbach.kiqr.core.query.exceptions.ScalarValueNotFoundException;
 import com.github.ftrossbach.kiqr.core.query.exceptions.SerdeNotFoundException;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
@@ -38,6 +40,7 @@ import java.util.function.Function;
  */
 public class AbstractQueryVerticle extends AbstractKiqrVerticle{
 
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractQueryVerticle.class);
     protected final String instanceId;
 
 
@@ -50,9 +53,9 @@ public class AbstractQueryVerticle extends AbstractKiqrVerticle{
 
     protected void execute(String addressPrefix, MappingFunction mapper){
         vertx.eventBus().consumer(addressPrefix + instanceId, msg -> {
-
+            AbstractQuery query = null;
             try {
-                AbstractQuery query = (AbstractQuery) msg.body();
+                query = (AbstractQuery) msg.body();
 
                 Serde<Object> keySerde = getSerde(query.getKeySerde());
                 Serde<Object> valueSerde = getSerde(query.getValueSerde());
@@ -62,10 +65,13 @@ public class AbstractQueryVerticle extends AbstractKiqrVerticle{
             } catch (ScalarValueNotFoundException e){
                 msg.fail(404, e.getMessage());
             } catch (SerdeNotFoundException e) {
+                LOG.error("Serde not instantiable", e);
                 msg.fail(400, e.getMessage());
             } catch (InvalidStateStoreException e) {
+                LOG.error(String.format("Store %s not queriable. Could be due to wrong store type or rebalancing", query.getStoreName()));
                 msg.fail(500, String.format("Store not available due to rebalancing or wrong store type"));
             } catch (RuntimeException e) {
+                LOG.error("Unexpected exception", e);
                 msg.fail(500, e.getMessage());
             }
         });

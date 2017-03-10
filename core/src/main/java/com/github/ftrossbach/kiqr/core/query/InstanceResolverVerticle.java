@@ -90,7 +90,10 @@ public class InstanceResolverVerticle extends AbstractKiqrVerticle {
 
                 if(instances.isEmpty()){
                     msg.fail(404, "No instance for store found: " + store);
-                } else{
+                } else if(instances.stream().anyMatch(meta -> "unavailable".equals(meta))){
+                    msg.fail(503, "Streaming application currently unavailable");
+                }
+                else {
                     msg.reply(new AllInstancesResponse(instances));
                 }
 

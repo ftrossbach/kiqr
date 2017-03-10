@@ -38,7 +38,7 @@ public abstract class AbstractKiqrVerticle extends AbstractVerticle{
             return (Serde<Object>) Class.forName(serde).newInstance();
 
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | ClassCastException e) {
-            throw new SerdeNotFoundException(String.format("Serde %s not instantiable: %s %s ", serde, e.getClass(), e.getMessage()));
+            throw new SerdeNotFoundException(serde, e);
         }
     }
 
