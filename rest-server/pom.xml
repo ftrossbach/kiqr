@@ -27,9 +27,7 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <groupId>${project.parent.groupId}</groupId>
     <artifactId>kiqr-rest-server</artifactId>
-    <version>${project.parent.version}</version>
 
 
     <dependencies>

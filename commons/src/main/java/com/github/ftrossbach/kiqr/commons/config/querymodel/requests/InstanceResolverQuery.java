@@ -30,9 +30,7 @@ public class InstanceResolverQuery {
         this.key = key;
     }
 
-    public InstanceResolverQuery(byte[] key) {
-        this.key = key;
-    }
+    public InstanceResolverQuery(){}
 
     public String getStoreName() {
         return storeName;
