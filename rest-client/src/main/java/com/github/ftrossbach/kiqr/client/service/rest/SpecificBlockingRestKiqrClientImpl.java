@@ -25,9 +25,23 @@ public class SpecificBlockingRestKiqrClientImpl<K,V> implements SpecificBlocking
         this.valueClass = valueClass;
         this.keySerde = keySerde;
         this.valueSerde = valueSerde;
-        this.genericClient = new GenericBlockingRestKiqrClientImpl(host, port);
+        this.genericClient = initGenericService(host, port);
         this.store = store;
     }
+
+    public SpecificBlockingRestKiqrClientImpl(GenericBlockingKiqrClient genericClient, String store, Class<K> keyClass, Class<V> valueClass, Serde<K> keySerde, Serde<V> valueSerde) {
+        this.keyClass = keyClass;
+        this.valueClass = valueClass;
+        this.keySerde = keySerde;
+        this.valueSerde = valueSerde;
+        this.genericClient = genericClient;
+        this.store = store;
+    }
+
+    protected GenericBlockingKiqrClient initGenericService(String host, int port){
+       return new GenericBlockingRestKiqrClientImpl(host, port);
+    }
+
 
     @Override
     public Optional<V> getScalarKeyValue( K key) {
