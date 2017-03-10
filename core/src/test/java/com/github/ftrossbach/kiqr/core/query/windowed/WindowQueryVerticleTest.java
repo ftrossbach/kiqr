@@ -206,7 +206,7 @@ public class WindowQueryVerticleTest {
 
                 context.assertTrue(handler instanceof ReplyException);
                 ReplyException ex = (ReplyException) handler;
-                context.assertEquals(409, ex.failureCode());
+                context.assertEquals(500, ex.failureCode());
 
             }));
 
@@ -229,7 +229,7 @@ public class WindowQueryVerticleTest {
 
                 context.assertTrue(handler instanceof ReplyException);
                 ReplyException ex = (ReplyException) handler;
-                context.assertEquals(409, ex.failureCode());
+                context.assertEquals(500, ex.failureCode());
 
             }));
 

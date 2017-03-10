@@ -1,12 +1,12 @@
 /**
  * Copyright © 2017 Florian Troßbach (trossbach@gmail.com)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,45 +37,29 @@ public class WindowedQueryVerticle extends AbstractQueryVerticle {
         super(instanceId, streams);
     }
 
-
     @Override
     public void start() throws Exception {
 
-        vertx.eventBus().consumer(Config.WINDOWED_QUERY_ADDRESS_PREFIX + instanceId, msg -> {
+        execute(Config.WINDOWED_QUERY_ADDRESS_PREFIX, (abstractQuery, keySerde, valueSerde) -> {
 
-            try {
-                WindowedQuery query = (WindowedQuery) msg.body();
+            WindowedQuery query = (WindowedQuery) abstractQuery;
+            ReadOnlyWindowStore<Object, Object> windowStore = streams.store(query.getStoreName(), QueryableStoreTypes.windowStore());
 
-                Serde<Object> keySerde = getSerde(query.getKeySerde());
-                Serde<Object> valueSerde = getSerde(query.getValueSerde());
+            try (WindowStoreIterator<Object> result = windowStore.fetch(deserializeObject(keySerde, query.getKey()), query.getFrom(), query.getTo())) {
 
-                ReadOnlyWindowStore<Object, Object> windowStore = streams.store(query.getStoreName(), QueryableStoreTypes.windowStore());
-
-                WindowedQueryResponse response;
-                try (WindowStoreIterator<Object> result = windowStore.fetch(deserializeObject(keySerde, query.getKey()), query.getFrom(), query.getTo())) {
-
-                    if (result.hasNext()) {
-                        SortedMap<Long, String> results = new TreeMap<>();
-                        while (result.hasNext()) {
-                            KeyValue<Long, Object> windowedEntry = result.next();
-                            results.put(windowedEntry.key, base64Encode(valueSerde, windowedEntry.value));
-                        }
-                        response = new WindowedQueryResponse(results);
-                    } else {
-                        response = new WindowedQueryResponse(Collections.emptySortedMap());
+                if (result.hasNext()) {
+                    SortedMap<Long, String> results = new TreeMap<>();
+                    while (result.hasNext()) {
+                        KeyValue<Long, Object> windowedEntry = result.next();
+                        results.put(windowedEntry.key, base64Encode(valueSerde, windowedEntry.value));
                     }
+                    return new WindowedQueryResponse(results);
+                } else {
+                    return new WindowedQueryResponse(Collections.emptySortedMap());
                 }
-
-                msg.reply(response);
-            } catch (SerdeNotFoundException e) {
-                msg.fail(400, e.getMessage());
-            } catch (InvalidStateStoreException e) {
-                msg.fail(409, String.format("Store not available due to rebalancing"));
-            } catch (RuntimeException e) {
-                msg.fail(500, e.getMessage());
             }
-
         });
+
 
     }
 

@@ -20,11 +20,9 @@ package com.github.ftrossbach.kiqr.commons.config.querymodel.requests;
  */
 public class WindowedQuery extends AbstractQuery{
 
-
     private byte[] key;
     private long from;
     private long to;
-
 
     public WindowedQuery(){}
 

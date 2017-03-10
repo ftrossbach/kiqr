@@ -43,36 +43,22 @@ public class AllKeyValuesQueryVerticle extends AbstractQueryVerticle {
     @Override
     public void start() throws Exception {
 
-        vertx.eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + instanceId, msg -> {
+        execute(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX, (query, keySerde, valueSerde) -> {
 
-            try {
-                AllKeyValuesQuery query = (AllKeyValuesQuery) msg.body();
+            ReadOnlyKeyValueStore<Object, Object> kvStore = streams.store(query.getStoreName(), QueryableStoreTypes.keyValueStore());
+            MultiValuedKeyValueQueryResponse response;
+            try (KeyValueIterator<Object, Object> result = kvStore.all()) {
+                if (result.hasNext()) {
+                    Map<String, String> results = new HashMap<>();
+                    while (result.hasNext()) {
+                        KeyValue<Object, Object> kvEntry = result.next();
 
-                Serde<Object> keySerde = getSerde(query.getKeySerde());
-                Serde<Object> valueSerde = getSerde(query.getValueSerde());
-
-                ReadOnlyKeyValueStore<Object, Object> kvStore = streams.store(query.getStoreName(), QueryableStoreTypes.keyValueStore());
-                MultiValuedKeyValueQueryResponse response;
-                try (KeyValueIterator<Object, Object> result = kvStore.all()) {
-                    if (result.hasNext()) {
-                        Map<String, String> results = new HashMap<>();
-                        while (result.hasNext()) {
-                            KeyValue<Object, Object> kvEntry = result.next();
-
-                            results.put(base64Encode(keySerde, kvEntry.key), base64Encode(valueSerde, kvEntry.value));
-                        }
-                       response = new MultiValuedKeyValueQueryResponse(results);
-                    } else {
-                        response = new MultiValuedKeyValueQueryResponse(Collections.emptyMap());
+                        results.put(base64Encode(keySerde, kvEntry.key), base64Encode(valueSerde, kvEntry.value));
                     }
+                   return new MultiValuedKeyValueQueryResponse(results);
+                } else {
+                   return new MultiValuedKeyValueQueryResponse(Collections.emptyMap());
                 }
-                msg.reply(response);
-            } catch (SerdeNotFoundException e) {
-                msg.fail(400, e.getMessage());
-            } catch (InvalidStateStoreException e) {
-                msg.fail(409, String.format("Store not available due to rebalancing"));
-            } catch (RuntimeException e) {
-                msg.fail(500, e.getMessage());
             }
         });
 

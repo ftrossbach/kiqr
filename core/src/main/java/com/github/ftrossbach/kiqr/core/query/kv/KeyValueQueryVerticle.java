@@ -19,6 +19,7 @@ import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQueryResponse;
 import com.github.ftrossbach.kiqr.core.query.AbstractQueryVerticle;
+import com.github.ftrossbach.kiqr.core.query.exceptions.ScalarValueNotFoundException;
 import com.github.ftrossbach.kiqr.core.query.exceptions.SerdeNotFoundException;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
@@ -41,30 +42,17 @@ public class KeyValueQueryVerticle extends AbstractQueryVerticle {
     @Override
     public void start() throws Exception {
 
-        vertx.eventBus().consumer(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + instanceId, msg -> {
+        execute(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX, (abstractQuery, keySerde, valueSerde) -> {
+            ScalarKeyValueQuery query = (ScalarKeyValueQuery) abstractQuery;
 
-            try {
-                ScalarKeyValueQuery query = (ScalarKeyValueQuery) msg.body();
-
-                Serde<Object> keySerde = getSerde(query.getKeySerde());
-                Serde<Object> valueSerde = getSerde(query.getValueSerde());
-
-                Object deserializedKey = deserializeObject(keySerde, query.getKey());
-                ReadOnlyKeyValueStore<Object, Object> kvStore = streams.store(query.getStoreName(), QueryableStoreTypes.keyValueStore());
-                Object result = kvStore.get(deserializedKey);
-                if (result != null) {
-                    msg.reply(new ScalarKeyValueQueryResponse(base64Encode(valueSerde, result)));
-                } else {
-                    msg.fail(404, "No value found");
-                }
-            }  catch (SerdeNotFoundException e) {
-                msg.fail(400, e.getMessage());
-            } catch (InvalidStateStoreException e) {
-                msg.fail(500, String.format("Store not available due to rebalancing or wrong store type"));
-            } catch (RuntimeException e) {
-                msg.fail(500, e.getMessage());
+            Object deserializedKey = deserializeObject(keySerde, query.getKey());
+            ReadOnlyKeyValueStore<Object, Object> kvStore = streams.store(query.getStoreName(), QueryableStoreTypes.keyValueStore());
+            Object result = kvStore.get(deserializedKey);
+            if (result != null) {
+                return new ScalarKeyValueQueryResponse(base64Encode(valueSerde, result));
+            } else {
+                throw new ScalarValueNotFoundException(String.format("Key %s not found in store %s", deserializedKey.toString(), abstractQuery.getStoreName()));
             }
-
         });
 
     }

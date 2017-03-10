@@ -15,7 +15,23 @@
  */
 package com.github.ftrossbach.kiqr.core.query;
 
+import com.github.ftrossbach.kiqr.commons.config.Config;
+import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.AbstractQuery;
+import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.AllKeyValuesQuery;
+import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.MultiValuedKeyValueQueryResponse;
+import com.github.ftrossbach.kiqr.core.query.exceptions.ScalarValueNotFoundException;
+import com.github.ftrossbach.kiqr.core.query.exceptions.SerdeNotFoundException;
+import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.errors.InvalidStateStoreException;
+import org.apache.kafka.streams.state.KeyValueIterator;
+import org.apache.kafka.streams.state.QueryableStoreTypes;
+import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Created by ftr on 05/03/2017.
@@ -28,5 +44,36 @@ public class AbstractQueryVerticle extends AbstractKiqrVerticle{
     public AbstractQueryVerticle(String instanceId, KafkaStreams streams) {
         super(streams);
         this.instanceId = instanceId;
+    }
+
+
+
+    protected void execute(String addressPrefix, MappingFunction mapper){
+        vertx.eventBus().consumer(addressPrefix + instanceId, msg -> {
+
+            try {
+                AbstractQuery query = (AbstractQuery) msg.body();
+
+                Serde<Object> keySerde = getSerde(query.getKeySerde());
+                Serde<Object> valueSerde = getSerde(query.getValueSerde());
+
+                Object response = mapper.apply(query, keySerde, valueSerde);
+                msg.reply(response);
+            } catch (ScalarValueNotFoundException e){
+                msg.fail(404, e.getMessage());
+            } catch (SerdeNotFoundException e) {
+                msg.fail(400, e.getMessage());
+            } catch (InvalidStateStoreException e) {
+                msg.fail(500, String.format("Store not available due to rebalancing or wrong store type"));
+            } catch (RuntimeException e) {
+                msg.fail(500, e.getMessage());
+            }
+        });
+    }
+
+    @FunctionalInterface
+    protected interface MappingFunction{
+
+        Object apply(AbstractQuery query, Serde<Object> keySerde, Serde<Object> valueSerde);
     }
 }
