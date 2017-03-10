@@ -189,8 +189,7 @@ public class GenericClientDistributedIntegrationITCase {
             if(handler.succeeded()){
                 VERTX2 = handler.result();
 
-                RestKiqrServerVerticle.Builder verticleBuilder = RestKiqrServerVerticle.Builder.serverBuilder(builder, streamProps);
-                RuntimeVerticle.Builder builder1 = verticleBuilder.withPort(PORT2);
+                RestKiqrServerVerticle.Builder verticleBuilder = RestKiqrServerVerticle.Builder.serverBuilder(builder, streamProps).withPort(PORT2);
 
                 AbstractVerticle verticle = verticleBuilder.build();
 
