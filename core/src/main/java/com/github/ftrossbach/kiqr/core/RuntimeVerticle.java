@@ -199,6 +199,7 @@ public class RuntimeVerticle extends AbstractVerticle {
 
         streams.setStateListener(((newState, oldState) -> {
             vertx.eventBus().publish(Config.CLUSTER_STATE_BROADCAST_ADDRESS, newState.toString());
+            LOG.info("State change in KafkaStreams recorded: oldstate=" + oldState +  ", newstate=" + newState);
             if(listener != null) listener.onChange(newState, oldState);
         }));
 
