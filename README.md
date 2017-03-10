@@ -26,11 +26,16 @@ bus, meaning that the instances can talk to each other on that bus. So any insta
 metadata methods and know at which address on the event bus to direct the query at. You can use any of Vert.x' supported
 cluster mechanisms.
 
+For serialization purposes, Kafka's Serdes (Serializer/Deserializers) are used as they are required to interact with
+Kafka anyway. They need to be on the classpath of both client and server.
+
 ## Client 
 At the moment, KIQR allows queries via HTTP. There is a server and a client module. More clients are certainly imaginable.
 
 ## Examples
 
+
+### Server Runtime
 Running a streams application in the KIQR runtime
 ```
 Properties streamProps = new Properties();
@@ -59,12 +64,62 @@ For single instance tests, it can be as easy as calling
 Vertx vertx = Vertx.vertx();
 ```
 
-## Caveats
-This is
-* not very well integrationally tested (it is a hobby project)
+### Client
+There is a rest client that does all the deserialization for you, so you only interact with the actual data types and
+not some serialized byte arrays. The client is written plain Java without Vert.x. 
+It only depends on Kafka Streams (for the serdes), Apache's HTTP client and Jackson.
+
+There is a generic variant were you specify the class and serde of both key and value type on each call, and a specific 
+one that can only be used for one key-value combination but gets these set in its constructor.
+
+
+```
+GenericBlockingKiqrClient client = new GenericBlockingRestKiqrClientImpl("localhost", port);
+
+//querying key "key1" from key-value store "kv" with String keys and Long values
+Optional<Long> result = client.getScalarKeyValue("kv", String.class, "key1", Long.class, Serdes.String(), Serdes.Long());
+
+//querying all keys from store "kv" with String keys and Long values
+Map<String, Long> result = client.getAllKeyValues("kv", String.class, Long.class, Serdes.String(), Serdes.Long());
+
+//querying key range "key1" to "key3" from store "kv" with String keys and Long values
+Map<String, Long> result = client.getRangeKeyValues("kv", String.class, Long.class, Serdes.String(), Serdes.Long(), "key1", "key3");
+
+//querying windows for "key1" from epoch time 1 to epoch time 1000 from store "window" with String keys and Long values
+Map<Long, Long> result = client.getWindow("window", String.class, "key1", Long.class, Serdes.String(), Serdes.Long(), 1L, 1000L);
+```
+
+Those methods look a bit clunky, that's why there is a specific variant:
+
+```
+//constructing a client for a store called "kv" with String keys and long values
+SpecificBlockingKiqrClient<String, Long> client = new SpecificBlockingRestKiqrClientImpl<>("localhost", 44321, "kv", String.class, Long.class, Serdes.String(), Serdes.Long());
+
+//querying key "key1" from key-value store "kv" with String keys and Long values
+Optional<Long> result = client.getScalarKeyValue("key1");
+
+//querying all keys from store "kv" with String keys and Long values
+Map<String, Long> result = client.getAllKeyValues();
+
+//querying key range "key1" to "key3" from store "kv" with String keys and Long values
+Map<String, Long> result = client.getRangeKeyValues("key1", "key3");
+
+//querying windows for "key1" from epoch time 1 to epoch time 1000 from store "window" with String keys and Long values
+Map<Long, Long> result = client.getWindow("key1", 1L, 1000L);
+       
+```
+
+## Caveats and restrictions
+
+* No support for Session Window queries 
+* not very well integrationally tested (yet? it is a hobby project)
 * not HA (when the streams app is rebalancing, there is not much you can do at this point)
 * you can probably break things by querying all data from a kv store
 * highly unstable API and implementation, things will change
+* you are responsible to know the names of the state stores and types of your keys and values in Kafka. There is 
+no way to infer them at runtime.
+* Java 8+
+* Kafka Streams 0.10.2
 
 
 

@@ -20,6 +20,8 @@ package com.github.ftrossbach.kiqr.commons.config;
  */
 public class Config {
 
+
+
     public static String INSTANCE_RESOLVER_ADDRESS_SINGLE = "com.github.ftrossbach.kiqr.core.resolver.single";
     public static String ALL_INSTANCES = "com.github.ftrossbach.kiqr.core.resolver.all";
 
