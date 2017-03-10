@@ -20,7 +20,8 @@ package com.github.ftrossbach.kiqr.commons.config.querymodel.requests;
  */
 public class WindowedQuery extends AbstractQuery{
 
-    private String valueSerde;
+
+    private byte[] key;
     private long from;
     private long to;
 
@@ -28,18 +29,10 @@ public class WindowedQuery extends AbstractQuery{
     public WindowedQuery(){}
 
     public WindowedQuery(String storeName, String keySerde, byte[] key, String valueSerde, long from, long to) {
-        super(storeName, keySerde, key);
-        this.valueSerde = valueSerde;
+        super(storeName, keySerde, valueSerde);
         this.from = from;
         this.to = to;
-    }
-
-    public String getValueSerde() {
-        return valueSerde;
-    }
-
-    public void setValueSerde(String valueSerde) {
-        this.valueSerde = valueSerde;
+        this.key = key;
     }
 
     public long getFrom() {
@@ -56,5 +49,13 @@ public class WindowedQuery extends AbstractQuery{
 
     public void setTo(long to) {
         this.to = to;
+    }
+
+    public byte[] getKey() {
+        return key;
+    }
+
+    public void setKey(byte[] key) {
+        this.key = key;
     }
 }

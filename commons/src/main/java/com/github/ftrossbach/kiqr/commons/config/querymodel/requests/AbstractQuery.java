@@ -20,17 +20,18 @@ package com.github.ftrossbach.kiqr.commons.config.querymodel.requests;
  */
 public abstract class AbstractQuery {
 
-    private  String storeName;
-    private  String keySerde;
-    private  byte[] key;
+    private String storeName;
+    private String keySerde;
+    private String valueSerde;
 
 
     public AbstractQuery(){}
 
-    public AbstractQuery(String storeName, String keySerde, byte[] key) {
+    public AbstractQuery(String storeName, String keySerde, String valueSerde) {
         this.storeName = storeName;
         this.keySerde = keySerde;
-        this.key = key;
+
+        this.valueSerde = valueSerde;
     }
 
     public String getStoreName() {
@@ -49,11 +50,11 @@ public abstract class AbstractQuery {
         this.keySerde = keySerde;
     }
 
-    public byte[] getKey() {
-        return key;
+    public String getValueSerde() {
+        return valueSerde;
     }
 
-    public void setKey(byte[] key) {
-        this.key = key;
+    public void setValueSerde(String valueSerde) {
+        this.valueSerde = valueSerde;
     }
 }

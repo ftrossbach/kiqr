@@ -18,17 +18,43 @@ package com.github.ftrossbach.kiqr.commons.config.querymodel.requests;
 /**
  * Created by ftr on 20/02/2017.
  */
-public class InstanceResolverQuery extends AbstractQuery{
+public class InstanceResolverQuery {
 
-    public InstanceResolverQuery(){}
-
-
+    private  String storeName;
+    private  String keySerde;
+    private  byte[] key;
 
     public InstanceResolverQuery(String storeName, String keySerde, byte[] key) {
-        super(storeName, keySerde, key);
+        this.storeName = storeName;
+        this.keySerde = keySerde;
+        this.key = key;
     }
 
+    public InstanceResolverQuery(byte[] key) {
+        this.key = key;
+    }
 
+    public String getStoreName() {
+        return storeName;
+    }
 
+    public void setStoreName(String storeName) {
+        this.storeName = storeName;
+    }
 
+    public String getKeySerde() {
+        return keySerde;
+    }
+
+    public void setKeySerde(String keySerde) {
+        this.keySerde = keySerde;
+    }
+
+    public byte[] getKey() {
+        return key;
+    }
+
+    public void setKey(byte[] key) {
+        this.key = key;
+    }
 }

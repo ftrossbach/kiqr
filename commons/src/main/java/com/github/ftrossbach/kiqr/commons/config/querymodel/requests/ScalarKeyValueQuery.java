@@ -20,21 +20,20 @@ package com.github.ftrossbach.kiqr.commons.config.querymodel.requests;
  */
 public class ScalarKeyValueQuery extends AbstractQuery{
 
-    private String valueSerde;
-
+    private byte[] key;
 
     public ScalarKeyValueQuery(){}
 
     public ScalarKeyValueQuery(String storeName, String keySerde, byte[] key, String valueSerde) {
-        super(storeName, keySerde, key);
-        this.valueSerde = valueSerde;
+        super(storeName, keySerde, valueSerde);
+        this.key = key;
     }
 
-    public String getValueSerde() {
-        return valueSerde;
+    public byte[] getKey() {
+        return key;
     }
 
-    public void setValueSerde(String valueSerde) {
-        this.valueSerde = valueSerde;
+    public void setKey(byte[] key) {
+        this.key = key;
     }
 }
