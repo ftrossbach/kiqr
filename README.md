@@ -6,13 +6,12 @@
 This project aims at providing a general purpose runtime for interactive queries.
 It uses Vert.x for coordination between cluster instances.
 
-
 ## Why
 Apache Kafka has a cool feature called "Interactive Queries" that enables you to query the internal state of a 
 Kafka Streams application. That's pretty cool, but if you run your streams application in a distributed manner where 
 different instances of your app are assigned different partitions of your inbound Kafka topics, each
 instance is only aware of the messages that come it's way. If you want a reliable query environment, you need to build
-a layer that is aware of those instances and which instances is responsible for which key. 
+a layer that is aware of those instances and which instance is responsible for which key. 
 
 KIQR was started as a vehicle to get deeper into the Interactive Query feature and to pick up some Vert.x knowledge
 along the way. It probably will never get past that point, but I'll be happy if it is of any use to someone else.
@@ -111,15 +110,14 @@ Map<Long, Long> result = client.getWindow("key1", 1L, 1000L);
 
 ## Caveats and restrictions
 
-* No support for Session Window queries 
+* No support for Session Window queries and count queries on key-value stores (no particular reason other than time)
 * not very well integrationally tested (yet? it is a hobby project)
 * not HA (when the streams app is rebalancing, there is not much you can do at this point)
-* you can probably break things by querying all data from a kv store
+* No streaming of large results - if you query too much data, things will probably get weird.
 * highly unstable API and implementation, things will change
 * you are responsible to know the names of the state stores and types of your keys and values in Kafka. There is 
 no way to infer them at runtime.
 * Java 8+
 * Kafka Streams 0.10.2
-
 
 
