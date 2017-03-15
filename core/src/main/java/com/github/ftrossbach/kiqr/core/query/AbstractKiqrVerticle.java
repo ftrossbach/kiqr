@@ -27,11 +27,7 @@ import java.util.Base64;
  */
 public abstract class AbstractKiqrVerticle extends AbstractVerticle{
 
-    protected final KafkaStreams streams;
 
-    public AbstractKiqrVerticle(KafkaStreams streams) {
-        this.streams = streams;
-    }
 
     protected Serde<Object> getSerde(String serde){
         try {

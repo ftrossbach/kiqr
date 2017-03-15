@@ -17,16 +17,21 @@ package com.github.ftrossbach.kiqr.core.query.facade;
 
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
+import com.github.ftrossbach.kiqr.core.ShareableStreamsMetadataProvider;
 import com.github.ftrossbach.kiqr.core.query.KiqrCodec;
 import io.vertx.core.eventbus.ReplyException;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.serialization.Serializer;
+import org.apache.kafka.streams.state.HostInfo;
+import org.apache.kafka.streams.state.StreamsMetadata;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import static org.mockito.Mockito.*;
 import java.util.*;
 
 /**
@@ -49,12 +54,13 @@ public class AllKeyValueQueryFacadeVerticleTest {
     @Test
     public void successOneInstances(TestContext context){
 
+        ShareableStreamsMetadataProvider mock = mock(ShareableStreamsMetadataProvider.class);
 
-        rule.vertx().eventBus().consumer(Config.ALL_INSTANCES, msg -> {
-            Set<String> hosts = new HashSet<>();
-            hosts.add("host1");
-            msg.reply(new AllInstancesResponse(hosts));
-        });
+        StreamsMetadata host1 = new StreamsMetadata(new HostInfo("host1", 1), Collections.emptySet(), Collections.emptySet());
+
+
+        when(mock.allMetadataForStore(anyString())).thenReturn( Arrays.asList(new StreamsMetadata[]{host1}));
+        rule.vertx().sharedData().getLocalMap("metadata").put("metadata", mock);
 
         rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host1", msg -> {
             Map<String, String> result = new HashMap<>();
@@ -63,7 +69,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
         });
 
 
-        rule.vertx().deployVerticle(new AllKeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
 
             AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
@@ -86,12 +92,15 @@ public class AllKeyValueQueryFacadeVerticleTest {
     public void successTwoInstances(TestContext context){
 
 
-        rule.vertx().eventBus().consumer(Config.ALL_INSTANCES, msg -> {
-            Set<String> hosts = new HashSet<>();
-            hosts.add("host1");
-            hosts.add("host2");
-            msg.reply(new AllInstancesResponse(hosts));
-        });
+        ShareableStreamsMetadataProvider mock = mock(ShareableStreamsMetadataProvider.class);
+
+        StreamsMetadata host1 = new StreamsMetadata(new HostInfo("host1", 1), Collections.emptySet(), Collections.emptySet());
+        StreamsMetadata host2 = new StreamsMetadata(new HostInfo("host2", 1), Collections.emptySet(), Collections.emptySet());
+
+        when(mock.allMetadataForStore(anyString())).thenReturn( Arrays.asList(new StreamsMetadata[]{host1, host2}));
+
+        rule.vertx().sharedData().getLocalMap("metadata").put("metadata", mock);
+
 
         rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host1", msg -> {
             Map<String, String> result = new HashMap<>();
@@ -104,7 +113,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
             msg.reply(new MultiValuedKeyValueQueryResponse(result));
         });
 
-        rule.vertx().deployVerticle(new AllKeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
 
             AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
@@ -129,12 +138,15 @@ public class AllKeyValueQueryFacadeVerticleTest {
     public void failureOneSourceFails(TestContext context){
 
 
-        rule.vertx().eventBus().consumer(Config.ALL_INSTANCES, msg -> {
-            Set<String> hosts = new HashSet<>();
-            hosts.add("host1");
-            hosts.add("host2");
-            msg.reply(new AllInstancesResponse(hosts));
-        });
+        ShareableStreamsMetadataProvider mock = mock(ShareableStreamsMetadataProvider.class);
+
+        StreamsMetadata host1 = new StreamsMetadata(new HostInfo("host1", 1), Collections.emptySet(), Collections.emptySet());
+        StreamsMetadata host2 = new StreamsMetadata(new HostInfo("host2", 1), Collections.emptySet(), Collections.emptySet());
+
+        when(mock.allMetadataForStore(anyString())).thenReturn( Arrays.asList(new StreamsMetadata[]{host1, host2}));
+
+        rule.vertx().sharedData().getLocalMap("metadata").put("metadata", mock);
+
 
         rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host1", msg -> {
             Map<String, String> result = new HashMap<>();
@@ -145,7 +157,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
            msg.fail(400, "msg");
         });
 
-        rule.vertx().deployVerticle(new AllKeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
 
             AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
@@ -163,15 +175,16 @@ public class AllKeyValueQueryFacadeVerticleTest {
     }
 
     @Test
-    public void failureOfInstanceResolution(TestContext context){
+    public void noInstanceFound(TestContext context){
 
 
-        rule.vertx().eventBus().consumer(Config.ALL_INSTANCES, msg -> {
-            msg.fail(400, "msg");
-        });
+        ShareableStreamsMetadataProvider mock = mock(ShareableStreamsMetadataProvider.class);
+        when(mock.allMetadataForStore(anyString())).thenReturn( Collections.emptyList());
+        rule.vertx().sharedData().getLocalMap("metadata").put("metadata", mock);
 
 
-        rule.vertx().deployVerticle(new AllKeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
+
+        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
 
             AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
@@ -179,7 +192,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
 
                 context.assertTrue(handler instanceof ReplyException);
                 ReplyException ex = (ReplyException) handler;
-                context.assertEquals(400, ex.failureCode());
+                context.assertEquals(404, ex.failureCode());
 
             }));
 
@@ -187,6 +200,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
         }));
 
     }
+
 
 
 }

@@ -18,7 +18,7 @@ package com.github.ftrossbach.kiqr.commons.config.querymodel.requests;
 /**
  * Created by ftr on 20/02/2017.
  */
-public class ScalarKeyValueQuery extends AbstractQuery{
+public class ScalarKeyValueQuery extends AbstractQuery implements HasKey{
 
     private byte[] key;
 

@@ -17,20 +17,29 @@ package com.github.ftrossbach.kiqr.core.query.facade;
 
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
+import com.github.ftrossbach.kiqr.core.ShareableStreamsMetadataProvider;
 import com.github.ftrossbach.kiqr.core.query.KiqrCodec;
 import io.vertx.core.eventbus.ReplyException;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.serialization.Serializer;
+import org.apache.kafka.streams.state.HostInfo;
+import org.apache.kafka.streams.state.StreamsMetadata;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by ftr on 05/03/2017.
@@ -42,8 +51,6 @@ public class KeyValueQueryFacadeVerticleTest {
 
     @Before
     public void setUp(){
-        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
-        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverResponse.class, new KiqrCodec(InstanceResolverResponse.class));
         rule.vertx().eventBus().registerDefaultCodec(ScalarKeyValueQuery.class, new KiqrCodec(ScalarKeyValueQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(ScalarKeyValueQueryResponse.class, new KiqrCodec(ScalarKeyValueQueryResponse.class));
 
@@ -52,15 +59,16 @@ public class KeyValueQueryFacadeVerticleTest {
     @Test
     public void success(TestContext context){
 
-        rule.vertx().eventBus().consumer(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, msg -> {
-            msg.reply(new InstanceResolverResponse(Optional.of("host")));
-        });
+        ShareableStreamsMetadataProvider mock = mock(ShareableStreamsMetadataProvider.class);
+        StreamsMetadata host = new StreamsMetadata(new HostInfo("host", 1), Collections.emptySet(), Collections.emptySet());
+        when(mock.metadataForKey(anyString(), any(), any(Serializer.class))).thenReturn(host);
+        rule.vertx().sharedData().getLocalMap("metadata").put("metadata", mock);
 
         rule.vertx().eventBus().consumer(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", msg -> {
            msg.reply(new ScalarKeyValueQueryResponse("value"));
         });
 
-        rule.vertx().deployVerticle(new KeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new KeyBasedQueryFacadeVerticle<ScalarKeyValueQuery, ScalarKeyValueQueryResponse>(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, Config.KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
 
             ScalarKeyValueQuery query = new ScalarKeyValueQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
@@ -81,15 +89,16 @@ public class KeyValueQueryFacadeVerticleTest {
     public void forwardingFailureDuringQuery(TestContext context){
 
 
-        rule.vertx().eventBus().consumer(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, msg -> {
-            msg.reply(new InstanceResolverResponse(Optional.of("host")));
-        });
+        ShareableStreamsMetadataProvider mock = mock(ShareableStreamsMetadataProvider.class);
+        StreamsMetadata host = new StreamsMetadata(new HostInfo("host", 1), Collections.emptySet(), Collections.emptySet());
+        when(mock.metadataForKey(anyString(), any(), any(Serializer.class))).thenReturn(host);
+        rule.vertx().sharedData().getLocalMap("metadata").put("metadata", mock);
 
         rule.vertx().eventBus().consumer(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", msg -> {
             msg.fail(400, "msg");
         });
 
-        rule.vertx().deployVerticle(new KeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new KeyBasedQueryFacadeVerticle<ScalarKeyValueQuery, ScalarKeyValueQueryResponse>(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, Config.KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
 
             ScalarKeyValueQuery query = new ScalarKeyValueQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
@@ -108,13 +117,13 @@ public class KeyValueQueryFacadeVerticleTest {
     @Test
     public void forwardingFailureDuringInstanceLookup(TestContext context){
 
-        rule.vertx().eventBus().consumer(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, msg -> {
-            msg.fail(500, "msg");
-        });
+        ShareableStreamsMetadataProvider mock = mock(ShareableStreamsMetadataProvider.class);
+        StreamsMetadata host = new StreamsMetadata(new HostInfo("host", 1), Collections.emptySet(), Collections.emptySet());
+        when(mock.metadataForKey(anyString(), any(), any(Serializer.class))).thenReturn(null);
+        rule.vertx().sharedData().getLocalMap("metadata").put("metadata", mock);
 
 
-
-        rule.vertx().deployVerticle(new KeyValueQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new KeyBasedQueryFacadeVerticle<ScalarKeyValueQuery, ScalarKeyValueQueryResponse>(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, Config.KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
 
             ScalarKeyValueQuery query = new ScalarKeyValueQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
@@ -122,8 +131,7 @@ public class KeyValueQueryFacadeVerticleTest {
 
                 context.assertTrue(handler instanceof ReplyException);
                 ReplyException ex = (ReplyException) handler;
-                context.assertEquals(500, ex.failureCode());
-                context.assertEquals("msg", ex.getMessage());
+                context.assertEquals(404, ex.failureCode());
 
             }));
         }));

@@ -17,19 +17,30 @@ package com.github.ftrossbach.kiqr.core.query.facade;
 
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
+import com.github.ftrossbach.kiqr.core.ShareableStreamsMetadataProvider;
 import com.github.ftrossbach.kiqr.core.query.KiqrCodec;
 import io.vertx.core.eventbus.ReplyException;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.serialization.Serializer;
+import org.apache.kafka.streams.state.HostInfo;
+import org.apache.kafka.streams.state.StreamsMetadata;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by ftr on 06/03/2017.
@@ -42,9 +53,6 @@ public class WindowQueryFacadeVerticleTest {
 
     @Before
     public void setUp(){
-        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverQuery.class, new KiqrCodec(InstanceResolverQuery.class));
-        rule.vertx().eventBus().registerDefaultCodec(InstanceResolverResponse.class, new KiqrCodec(InstanceResolverResponse.class));
-
         rule.vertx().eventBus().registerDefaultCodec(WindowedQuery.class, new KiqrCodec(WindowedQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(WindowedQueryResponse.class, new KiqrCodec(WindowedQueryResponse.class));
 
@@ -53,9 +61,10 @@ public class WindowQueryFacadeVerticleTest {
     @Test
     public void success(TestContext context){
 
-        rule.vertx().eventBus().consumer(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, msg -> {
-            msg.reply(new InstanceResolverResponse(Optional.of("host")));
-        });
+        ShareableStreamsMetadataProvider mock = mock(ShareableStreamsMetadataProvider.class);
+        StreamsMetadata host = new StreamsMetadata(new HostInfo("host", 1), Collections.emptySet(), Collections.emptySet());
+        when(mock.metadataForKey(anyString(), any(), any(Serializer.class))).thenReturn(host);
+        rule.vertx().sharedData().getLocalMap("metadata").put("metadata", mock);
 
         rule.vertx().eventBus().consumer(Config.WINDOWED_QUERY_ADDRESS_PREFIX + "host", msg -> {
             SortedMap<Long, String> result = new TreeMap<>();
@@ -65,7 +74,7 @@ public class WindowQueryFacadeVerticleTest {
             msg.reply(new WindowedQueryResponse(result ));
         });
 
-        rule.vertx().deployVerticle(new WindowedQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new KeyBasedQueryFacadeVerticle<WindowedQuery, WindowedQueryResponse>(Config.WINDOWED_QUERY_FACADE_ADDRESS, Config.WINDOWED_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
 
             WindowedQuery query = new WindowedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(),Serdes.String().getClass().getName(),  1, 2);
 
@@ -90,15 +99,17 @@ public class WindowQueryFacadeVerticleTest {
     public void forwardingFailureDuringQuery(TestContext context){
 
 
-        rule.vertx().eventBus().consumer(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, msg -> {
-            msg.reply(new InstanceResolverResponse(Optional.of("host")));
-        });
+        ShareableStreamsMetadataProvider mock = mock(ShareableStreamsMetadataProvider.class);
+        StreamsMetadata host = new StreamsMetadata(new HostInfo("host", 1), Collections.emptySet(), Collections.emptySet());
+        when(mock.metadataForKey(anyString(), any(), any(Serializer.class))).thenReturn(host);
+        rule.vertx().sharedData().getLocalMap("metadata").put("metadata", mock);
+
 
         rule.vertx().eventBus().consumer(Config.WINDOWED_QUERY_ADDRESS_PREFIX + "host", msg -> {
             msg.fail(400, "msg");
         });
 
-        rule.vertx().deployVerticle(new WindowedQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new KeyBasedQueryFacadeVerticle<WindowedQuery, WindowedQueryResponse>(Config.WINDOWED_QUERY_FACADE_ADDRESS, Config.WINDOWED_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
 
             WindowedQuery query = new WindowedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(),Serdes.String().getClass().getName(),  1, 2);
 
@@ -117,13 +128,13 @@ public class WindowQueryFacadeVerticleTest {
     @Test
     public void forwardingFailureDuringInstanceLookup(TestContext context){
 
-        rule.vertx().eventBus().consumer(Config.INSTANCE_RESOLVER_ADDRESS_SINGLE, msg -> {
-            msg.fail(500, "msg");
-        });
+        ShareableStreamsMetadataProvider mock = mock(ShareableStreamsMetadataProvider.class);
+        StreamsMetadata host = new StreamsMetadata(new HostInfo("host", 1), Collections.emptySet(), Collections.emptySet());
+        when(mock.metadataForKey(anyString(), any(), any(Serializer.class))).thenReturn(null);
+        rule.vertx().sharedData().getLocalMap("metadata").put("metadata", mock);
 
 
-
-        rule.vertx().deployVerticle(new WindowedQueryFacadeVerticle(), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new KeyBasedQueryFacadeVerticle<WindowedQuery, WindowedQueryResponse>(Config.WINDOWED_QUERY_FACADE_ADDRESS, Config.WINDOWED_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
 
             WindowedQuery query = new WindowedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(),Serdes.String().getClass().getName(),  1, 2);
 
@@ -131,8 +142,7 @@ public class WindowQueryFacadeVerticleTest {
 
                 context.assertTrue(handler instanceof ReplyException);
                 ReplyException ex = (ReplyException) handler;
-                context.assertEquals(500, ex.failureCode());
-                context.assertEquals("msg", ex.getMessage());
+                context.assertEquals(404, ex.failureCode());
 
             }));
         }));

@@ -213,6 +213,7 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
 
     private void forwardErrorCode(RoutingContext routingContext, AsyncResult<Message<Object>> reply) {
         ReplyException ex = (ReplyException) reply.cause();
+        ex.printStackTrace();
         HttpServerResponse response = routingContext.response();
         response.setStatusCode(ex.failureCode());
         response.end();

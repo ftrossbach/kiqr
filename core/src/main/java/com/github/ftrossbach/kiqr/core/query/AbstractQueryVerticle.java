@@ -42,10 +42,10 @@ public class AbstractQueryVerticle extends AbstractKiqrVerticle{
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractQueryVerticle.class);
     protected final String instanceId;
-
+    protected final KafkaStreams streams;
 
     public AbstractQueryVerticle(String instanceId, KafkaStreams streams) {
-        super(streams);
+        this.streams = streams;
         this.instanceId = instanceId;
     }
 

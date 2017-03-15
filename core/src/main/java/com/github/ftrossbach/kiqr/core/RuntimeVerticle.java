@@ -18,12 +18,9 @@ package com.github.ftrossbach.kiqr.core;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
-import com.github.ftrossbach.kiqr.core.query.InstanceResolverVerticle;
 import com.github.ftrossbach.kiqr.core.query.KiqrCodec;
-import com.github.ftrossbach.kiqr.core.query.facade.AllKeyValueQueryFacadeVerticle;
-import com.github.ftrossbach.kiqr.core.query.facade.KeyValueQueryFacadeVerticle;
-import com.github.ftrossbach.kiqr.core.query.facade.RangeKeyValueQueryFacadeVerticle;
-import com.github.ftrossbach.kiqr.core.query.facade.WindowedQueryFacadeVerticle;
+import com.github.ftrossbach.kiqr.core.query.facade.KeyBasedQueryFacadeVerticle;
+import com.github.ftrossbach.kiqr.core.query.facade.ScatterGatherQueryFacadeVerticle;
 import com.github.ftrossbach.kiqr.core.query.kv.AllKeyValuesQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.kv.KeyValueQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.kv.RangeKeyValueQueryVerticle;
@@ -32,19 +29,21 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.Json;
-
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
-
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
+import java.util.UUID;
 import java.util.stream.Stream;
+
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Created by ftr on 18/02/2017.
@@ -156,16 +155,18 @@ public class RuntimeVerticle extends AbstractVerticle {
             //starting streams can take a while, therefore we do it asynchronously
             props.put(StreamsConfig.APPLICATION_SERVER_CONFIG, instanceId + ":124");
             KafkaStreams streams = createAndStartStream();
+            vertx.sharedData().getLocalMap("metadata").put("metadata", new ShareableStreamsMetadataProvider(streams));
             future.complete(streams);
 
         }, res -> {
 
             if (res.succeeded()) {
                 LOG.info("Started KafkaStreams, deploying query verticles");
-                Future deployFuture = deployVerticles(new InstanceResolverVerticle(res.result()), new KeyValueQueryVerticle(instanceId, res.result()),
+
+                Future deployFuture = deployVerticles(new KeyValueQueryVerticle(instanceId, res.result()),
                         new AllKeyValuesQueryVerticle(instanceId, res.result()), new RangeKeyValueQueryVerticle(instanceId, res.result()),
-                        new WindowedQueryVerticle(instanceId, res.result()), new AllKeyValueQueryFacadeVerticle(),
-                        new KeyValueQueryFacadeVerticle(), new RangeKeyValueQueryFacadeVerticle(), new WindowedQueryFacadeVerticle());
+                        new WindowedQueryVerticle(instanceId, res.result()), new KeyBasedQueryFacadeVerticle<ScalarKeyValueQuery, ScalarKeyValueQueryResponse>(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, Config.KEY_VALUE_QUERY_ADDRESS_PREFIX),
+                        new ScatterGatherQueryFacadeVerticle(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX), new ScatterGatherQueryFacadeVerticle(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX), new KeyBasedQueryFacadeVerticle<WindowedQuery, WindowedQueryResponse>(Config.WINDOWED_QUERY_FACADE_ADDRESS, Config.WINDOWED_QUERY_ADDRESS_PREFIX));
 
 
 
@@ -198,6 +199,7 @@ public class RuntimeVerticle extends AbstractVerticle {
 
 
         streams.setStateListener(((newState, oldState) -> {
+
             vertx.eventBus().publish(Config.CLUSTER_STATE_BROADCAST_ADDRESS, newState.toString());
             LOG.info("State change in KafkaStreams recorded: oldstate=" + oldState +  ", newstate=" + newState);
             if(listener != null) listener.onChange(newState, oldState);
@@ -222,7 +224,7 @@ public class RuntimeVerticle extends AbstractVerticle {
                     return future;
                 })
                 .map(future -> (Future) future)
-                .collect(Collectors.toList());
+                .collect(toList());
 
         return CompositeFuture.all(futures);
 
@@ -230,13 +232,11 @@ public class RuntimeVerticle extends AbstractVerticle {
 
 
     private void registerCodecs() {
-        registerCodec(InstanceResolverQuery.class);
         registerCodec(ScalarKeyValueQuery.class);
         registerCodec(WindowedQuery.class);
         registerCodec(ScalarKeyValueQueryResponse.class);
         registerCodec(MultiValuedKeyValueQueryResponse.class);
         registerCodec(WindowedQueryResponse.class);
-        registerCodec(InstanceResolverResponse.class);
         registerCodec(AllKeyValuesQuery.class);
         registerCodec(RangeKeyValueQuery.class);
         registerCodec(AllInstancesResponse.class);
