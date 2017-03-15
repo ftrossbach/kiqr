@@ -40,6 +40,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.function.BinaryOperator;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 
@@ -163,10 +165,12 @@ public class RuntimeVerticle extends AbstractVerticle {
             if (res.succeeded()) {
                 LOG.info("Started KafkaStreams, deploying query verticles");
 
+                Supplier<MultiValuedKeyValueQueryResponse> multiValuedIdentity = () -> new MultiValuedKeyValueQueryResponse();
+                BinaryOperator<MultiValuedKeyValueQueryResponse> multiValuedReducer = (a, b) -> a.merge(b);
                 Future deployFuture = deployVerticles(new KeyValueQueryVerticle(instanceId, res.result()),
                         new AllKeyValuesQueryVerticle(instanceId, res.result()), new RangeKeyValueQueryVerticle(instanceId, res.result()),
                         new WindowedQueryVerticle(instanceId, res.result()), new KeyBasedQueryFacadeVerticle<ScalarKeyValueQuery, ScalarKeyValueQueryResponse>(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, Config.KEY_VALUE_QUERY_ADDRESS_PREFIX),
-                        new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b)), new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b)), new KeyBasedQueryFacadeVerticle<WindowedQuery, WindowedQueryResponse>(Config.WINDOWED_QUERY_FACADE_ADDRESS, Config.WINDOWED_QUERY_ADDRESS_PREFIX));
+                        new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX, multiValuedIdentity, multiValuedReducer), new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX, multiValuedIdentity, multiValuedReducer), new KeyBasedQueryFacadeVerticle<WindowedQuery, WindowedQueryResponse>(Config.WINDOWED_QUERY_FACADE_ADDRESS, Config.WINDOWED_QUERY_ADDRESS_PREFIX));
 
 
 
