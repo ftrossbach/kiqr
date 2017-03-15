@@ -45,7 +45,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
     @Before
     public void setUp(){
         rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
-        rule.vertx().eventBus().registerDefaultCodec(AllKeyValuesQuery.class, new KiqrCodec(AllKeyValuesQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(StoreWideQuery.class, new KiqrCodec(StoreWideQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(MultiValuedKeyValueQueryResponse.class, new KiqrCodec(MultiValuedKeyValueQueryResponse.class));
 
     }
@@ -70,7 +70,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
 
         rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b)), context.asyncAssertSuccess(deployment->{
 
-            AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
+            StoreWideQuery query = new StoreWideQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, query, context.asyncAssertSuccess(reply ->{
 
@@ -114,7 +114,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
 
         rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b)), context.asyncAssertSuccess(deployment->{
 
-            AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
+            StoreWideQuery query = new StoreWideQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, query, context.asyncAssertSuccess(reply ->{
 
@@ -158,7 +158,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
 
         rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b)), context.asyncAssertSuccess(deployment->{
 
-            AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
+            StoreWideQuery query = new StoreWideQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, query, context.asyncAssertFailure(handler ->{
 
@@ -185,7 +185,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
 
         rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b)), context.asyncAssertSuccess(deployment->{
 
-            AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
+            StoreWideQuery query = new StoreWideQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, query, context.asyncAssertFailure(handler ->{
 

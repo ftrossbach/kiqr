@@ -239,7 +239,7 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
 
                 if (from == null && to == null) {
 
-                    query = new AllKeyValuesQuery(store, keySerde, valueSerde);
+                    query = new StoreWideQuery(store, keySerde, valueSerde);
                     address = Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS;
                 } else {
                     byte[] fromArray = Base64.getDecoder().decode(from);

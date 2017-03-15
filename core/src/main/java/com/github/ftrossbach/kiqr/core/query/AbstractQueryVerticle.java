@@ -15,25 +15,14 @@
  */
 package com.github.ftrossbach.kiqr.core.query;
 
-import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.AbstractQuery;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.AllKeyValuesQuery;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.MultiValuedKeyValueQueryResponse;
 import com.github.ftrossbach.kiqr.core.query.exceptions.ScalarValueNotFoundException;
 import com.github.ftrossbach.kiqr.core.query.exceptions.SerdeNotFoundException;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.errors.InvalidStateStoreException;
-import org.apache.kafka.streams.state.KeyValueIterator;
-import org.apache.kafka.streams.state.QueryableStoreTypes;
-import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
 
 /**
  * Created by ftr on 05/03/2017.

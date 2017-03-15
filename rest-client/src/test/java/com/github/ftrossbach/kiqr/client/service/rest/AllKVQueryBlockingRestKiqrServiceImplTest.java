@@ -18,7 +18,7 @@ package com.github.ftrossbach.kiqr.client.service.rest;
 import com.github.ftrossbach.kiqr.client.service.ConnectionException;
 import com.github.ftrossbach.kiqr.client.service.QueryExecutionException;
 import com.github.ftrossbach.kiqr.commons.config.Config;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.AllKeyValuesQuery;
+import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.StoreWideQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.MultiValuedKeyValueQueryResponse;
 import com.github.ftrossbach.kiqr.core.query.KiqrCodec;
 import io.vertx.core.http.HttpServerOptions;
@@ -55,7 +55,7 @@ public class AllKVQueryBlockingRestKiqrServiceImplTest {
 
     @Before
     public void setUp() {
-        rule.vertx().eventBus().registerDefaultCodec(AllKeyValuesQuery.class, new KiqrCodec(AllKeyValuesQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(StoreWideQuery.class, new KiqrCodec(StoreWideQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(MultiValuedKeyValueQueryResponse.class, new KiqrCodec(MultiValuedKeyValueQueryResponse.class));
 
 

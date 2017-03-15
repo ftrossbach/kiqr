@@ -241,7 +241,7 @@ public class RuntimeVerticle extends AbstractVerticle {
         registerCodec(ScalarKeyValueQueryResponse.class);
         registerCodec(MultiValuedKeyValueQueryResponse.class);
         registerCodec(WindowedQueryResponse.class);
-        registerCodec(AllKeyValuesQuery.class);
+        registerCodec(StoreWideQuery.class);
         registerCodec(RangeKeyValueQuery.class);
         registerCodec(AllInstancesResponse.class);
 

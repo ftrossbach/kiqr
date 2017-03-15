@@ -18,14 +18,14 @@ package com.github.ftrossbach.kiqr.commons.config.querymodel.requests;
 /**
  * Created by ftr on 20/02/2017.
  */
-public class AllKeyValuesQuery extends AbstractQuery{
+public class StoreWideQuery extends AbstractQuery{
 
 
 
-    public AllKeyValuesQuery() {
+    public StoreWideQuery() {
     }
 
-    public AllKeyValuesQuery(String storeName, String keySerde, String valueSerde) {
+    public StoreWideQuery(String storeName, String keySerde, String valueSerde) {
         super(storeName, keySerde, valueSerde);
     }
 

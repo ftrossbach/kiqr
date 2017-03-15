@@ -51,7 +51,7 @@ public class MultiValuedQueryHttpServerTest {
 
     @Before
     public void setUp(TestContext context) throws Exception{
-        rule.vertx().eventBus().registerDefaultCodec(AllKeyValuesQuery.class, new KiqrCodec(AllKeyValuesQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(StoreWideQuery.class, new KiqrCodec(StoreWideQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(RangeKeyValueQuery.class, new KiqrCodec<>(RangeKeyValueQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(MultiValuedKeyValueQueryResponse.class, new KiqrCodec(MultiValuedKeyValueQueryResponse.class));
 
@@ -70,8 +70,8 @@ public class MultiValuedQueryHttpServerTest {
 
 
         rule.vertx().eventBus().consumer(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, msg -> {
-            context.assertTrue(msg.body() instanceof AllKeyValuesQuery);
-            AllKeyValuesQuery query = (AllKeyValuesQuery) msg.body();
+            context.assertTrue(msg.body() instanceof StoreWideQuery);
+            StoreWideQuery query = (StoreWideQuery) msg.body();
 
             context.assertEquals("store", query.getStoreName());
             context.assertEquals(Serdes.String().getClass().getName(), query.getKeySerde());

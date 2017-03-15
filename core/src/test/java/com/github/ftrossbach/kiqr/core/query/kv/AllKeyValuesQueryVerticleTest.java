@@ -34,10 +34,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import sun.java2d.pipe.SpanShapeRenderer;
-
-
-import java.util.Collections;
 
 
 import static org.mockito.Matchers.any;
@@ -57,7 +53,7 @@ public class AllKeyValuesQueryVerticleTest {
     @Before
     public void setUp(){
         rule.vertx().eventBus().registerDefaultCodec(AllInstancesResponse.class, new KiqrCodec(AllInstancesResponse.class));
-        rule.vertx().eventBus().registerDefaultCodec(AllKeyValuesQuery.class, new KiqrCodec(AllKeyValuesQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(StoreWideQuery.class, new KiqrCodec(StoreWideQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(MultiValuedKeyValueQueryResponse.class, new KiqrCodec(MultiValuedKeyValueQueryResponse.class));
     }
 
@@ -75,7 +71,7 @@ public class AllKeyValuesQueryVerticleTest {
 
         rule.vertx().deployVerticle(new AllKeyValuesQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
-            AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
+            StoreWideQuery query = new StoreWideQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertSuccess(reply ->{
 
@@ -107,7 +103,7 @@ public class AllKeyValuesQueryVerticleTest {
 
         rule.vertx().deployVerticle(new AllKeyValuesQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
-            AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
+            StoreWideQuery query = new StoreWideQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertSuccess(reply ->{
 
@@ -140,7 +136,7 @@ public class AllKeyValuesQueryVerticleTest {
 
         rule.vertx().deployVerticle(new AllKeyValuesQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
-            AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
+            StoreWideQuery query = new StoreWideQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertSuccess(reply ->{
 
@@ -161,7 +157,7 @@ public class AllKeyValuesQueryVerticleTest {
 
         rule.vertx().deployVerticle(new AllKeyValuesQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
-            AllKeyValuesQuery query = new AllKeyValuesQuery("store", "i am not a serde", Serdes.String().getClass().getName());
+            StoreWideQuery query = new StoreWideQuery("store", "i am not a serde", Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertFailure(handler ->{
 
@@ -181,7 +177,7 @@ public class AllKeyValuesQueryVerticleTest {
 
         rule.vertx().deployVerticle(new AllKeyValuesQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
-            AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), "i am not a serde" );
+            StoreWideQuery query = new StoreWideQuery("store", Serdes.String().getClass().getName(), "i am not a serde" );
 
             rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertFailure(handler ->{
 
@@ -203,7 +199,7 @@ public class AllKeyValuesQueryVerticleTest {
 
         rule.vertx().deployVerticle(new AllKeyValuesQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
-            AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
+            StoreWideQuery query = new StoreWideQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertFailure(handler ->{
 
@@ -226,7 +222,7 @@ public class AllKeyValuesQueryVerticleTest {
 
         rule.vertx().deployVerticle(new AllKeyValuesQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
-            AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
+            StoreWideQuery query = new StoreWideQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertFailure(handler ->{
 
@@ -249,7 +245,7 @@ public class AllKeyValuesQueryVerticleTest {
 
         rule.vertx().deployVerticle(new AllKeyValuesQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
-            AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
+            StoreWideQuery query = new StoreWideQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertFailure(handler ->{
 
