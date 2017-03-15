@@ -24,7 +24,6 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.streams.state.HostInfo;
 import org.apache.kafka.streams.state.StreamsMetadata;
 import org.junit.Before;
@@ -69,7 +68,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
         });
 
 
-        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b)), context.asyncAssertSuccess(deployment->{
 
             AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
@@ -113,7 +112,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
             msg.reply(new MultiValuedKeyValueQueryResponse(result));
         });
 
-        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b)), context.asyncAssertSuccess(deployment->{
 
             AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
@@ -157,7 +156,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
            msg.fail(400, "msg");
         });
 
-        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b)), context.asyncAssertSuccess(deployment->{
 
             AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 
@@ -184,7 +183,7 @@ public class AllKeyValueQueryFacadeVerticleTest {
 
 
 
-        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b)), context.asyncAssertSuccess(deployment->{
 
             AllKeyValuesQuery query = new AllKeyValuesQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName());
 

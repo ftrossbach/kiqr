@@ -70,7 +70,7 @@ public class RangeKeyValueQueryFacadeVerticleTest {
         });
 
 
-        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b)), context.asyncAssertSuccess(deployment->{
 
             RangeKeyValueQuery query = new RangeKeyValueQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName(), "key".getBytes(), "key".getBytes());
 
@@ -113,7 +113,7 @@ public class RangeKeyValueQueryFacadeVerticleTest {
             msg.reply(new MultiValuedKeyValueQueryResponse(result));
         });
 
-        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b)), context.asyncAssertSuccess(deployment->{
 
             RangeKeyValueQuery query = new RangeKeyValueQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName(), "key".getBytes(), "key".getBytes());
 
@@ -155,7 +155,7 @@ public class RangeKeyValueQueryFacadeVerticleTest {
            msg.fail(400, "msg");
         });
 
-        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b)), context.asyncAssertSuccess(deployment->{
 
             RangeKeyValueQuery query = new RangeKeyValueQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName(), "key".getBytes(), "key".getBytes());
 
@@ -184,7 +184,7 @@ public class RangeKeyValueQueryFacadeVerticleTest {
         rule.vertx().sharedData().getLocalMap("metadata").put("metadata", mock);
 
 
-        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b)), context.asyncAssertSuccess(deployment->{
 
             RangeKeyValueQuery query = new RangeKeyValueQuery("store", Serdes.String().getClass().getName(), Serdes.String().getClass().getName(), "key".getBytes(), "key".getBytes());
 

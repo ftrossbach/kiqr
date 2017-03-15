@@ -15,7 +15,6 @@
  */
 package com.github.ftrossbach.kiqr.core.query.facade;
 
-import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
 import com.github.ftrossbach.kiqr.core.ShareableStreamsMetadataProvider;
 import io.vertx.core.AbstractVerticle;
@@ -27,19 +26,25 @@ import org.apache.kafka.streams.state.StreamsMetadata;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.BinaryOperator;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
  * Created by ftr on 22/02/2017.
  */
-public class ScatterGatherQueryFacadeVerticle extends AbstractVerticle {
+public class ScatterGatherQueryFacadeVerticle<RES> extends AbstractVerticle {
 
     private final String listeningAddress;
     private final String queryAddressPrefix;
+    private final Supplier<RES> identity;
+    private final BinaryOperator<RES> reducer;
 
-    public ScatterGatherQueryFacadeVerticle(String listeningAddress, String queryAddressPrefix) {
+    public ScatterGatherQueryFacadeVerticle(String listeningAddress, String queryAddressPrefix, Supplier<RES> identity, BinaryOperator<RES> reducer) {
         this.listeningAddress = listeningAddress;
         this.queryAddressPrefix = queryAddressPrefix;
+        this.identity = identity;
+        this.reducer = reducer;
     }
 
     @Override
@@ -73,10 +78,10 @@ public class ScatterGatherQueryFacadeVerticle extends AbstractVerticle {
             all.setHandler(compoundFutureHandler -> {
 
                 if (compoundFutureHandler.succeeded()) {
-                    List<Message<MultiValuedKeyValueQueryResponse>> list = compoundFutureHandler.result().list();
+                    List<Message<RES>> list = compoundFutureHandler.result().list();
 
-                    MultiValuedKeyValueQueryResponse compoundResult = list.stream().map(message -> message.body()).reduce(new MultiValuedKeyValueQueryResponse(), (a, b) -> a.merge(b));
-                    msg.reply(compoundResult);
+                    RES reduced = list.stream().map(message -> message.body()).reduce(identity.get(), reducer);
+                    msg.reply(reduced);
                 } else {
                     ReplyException cause = (ReplyException) compoundFutureHandler.cause();
                     msg.fail(cause.failureCode(), cause.getMessage());
