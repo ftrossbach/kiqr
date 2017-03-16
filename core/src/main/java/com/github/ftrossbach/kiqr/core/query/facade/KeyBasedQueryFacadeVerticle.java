@@ -34,7 +34,6 @@ public class KeyBasedQueryFacadeVerticle<REQ extends AbstractQuery & HasKey, RES
 
             StreamsMetadata streamsMetadata = metadata.metadataForKey(query.getStoreName(), deserializedKey, serde.serializer());
 
-
             if(streamsMetadata == null ) {
                 msg.fail(404, "Store not found: " + query.getStoreName());
             } else if("unavailable".equals(streamsMetadata.host())){

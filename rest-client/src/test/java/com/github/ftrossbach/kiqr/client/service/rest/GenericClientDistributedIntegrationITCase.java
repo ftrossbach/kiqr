@@ -411,6 +411,20 @@ public class GenericClientDistributedIntegrationITCase {
 
     }
 
+
+    @Test
+    public void successfulCount() throws Exception{
+
+        GenericBlockingKiqrClient client = new GenericBlockingRestKiqrClientImpl("localhost", port);
+
+        Optional<Long> count = client.count("kv");
+
+        assertTrue(count.isPresent());;
+        assertThat(count.get(), is(greaterThan(0L)));
+
+
+    }
+
     @AfterClass
     public static void tearDown() throws Exception {
 

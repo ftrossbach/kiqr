@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -55,7 +54,7 @@ public class GenericBlockingRestKiqrClientImpl implements GenericBlockingKiqrCli
 
 
         return execute(() -> getUriBuilder()
-                .setPath(String.format("/api/v1/kv/%s/%s", store, Base64.getEncoder().encodeToString(keySerde.serializer().serialize("", key))))
+                .setPath(String.format("/api/v1/kv/%s/values/%s", store, Base64.getEncoder().encodeToString(keySerde.serializer().serialize("", key))))
                 .addParameter("keySerde", keySerde.getClass().getName())
                 .addParameter("valueSerde", valueSerde.getClass().getName())
                 .build(), bytes -> {
@@ -137,6 +136,24 @@ public class GenericBlockingRestKiqrClientImpl implements GenericBlockingKiqrCli
         }, () -> Collections.emptyMap());
 
 
+    }
+
+    @Override
+    public Optional<Long> count(String store) {
+        return execute(() -> getUriBuilder()
+                .setPath(String.format("/api/v1/kv/%s/count", store))
+                .build(), bytes -> {
+            Map<String, Object> stringObjectMap = mapper.readValue(bytes, Map.class);
+
+            Object count = stringObjectMap.get("count");
+            if(count instanceof Integer){
+                return Optional.of(((Integer) count).longValue());
+            } else {
+                return Optional.of((Long) count);
+            }
+
+
+        }, () -> Optional.empty());
     }
 
 

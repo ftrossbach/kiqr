@@ -22,6 +22,7 @@ import com.github.ftrossbach.kiqr.core.query.KiqrCodec;
 import com.github.ftrossbach.kiqr.core.query.facade.KeyBasedQueryFacadeVerticle;
 import com.github.ftrossbach.kiqr.core.query.facade.ScatterGatherQueryFacadeVerticle;
 import com.github.ftrossbach.kiqr.core.query.kv.AllKeyValuesQueryVerticle;
+import com.github.ftrossbach.kiqr.core.query.kv.KeyValueCountVerticle;
 import com.github.ftrossbach.kiqr.core.query.kv.KeyValueQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.kv.RangeKeyValueQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.windowed.WindowedQueryVerticle;
@@ -168,9 +169,16 @@ public class RuntimeVerticle extends AbstractVerticle {
                 Supplier<MultiValuedKeyValueQueryResponse> multiValuedIdentity = () -> new MultiValuedKeyValueQueryResponse();
                 BinaryOperator<MultiValuedKeyValueQueryResponse> multiValuedReducer = (a, b) -> a.merge(b);
                 Future deployFuture = deployVerticles(new KeyValueQueryVerticle(instanceId, res.result()),
-                        new AllKeyValuesQueryVerticle(instanceId, res.result()), new RangeKeyValueQueryVerticle(instanceId, res.result()),
-                        new WindowedQueryVerticle(instanceId, res.result()), new KeyBasedQueryFacadeVerticle<ScalarKeyValueQuery, ScalarKeyValueQueryResponse>(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, Config.KEY_VALUE_QUERY_ADDRESS_PREFIX),
-                        new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX, multiValuedIdentity, multiValuedReducer), new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX, multiValuedIdentity, multiValuedReducer), new KeyBasedQueryFacadeVerticle<WindowedQuery, WindowedQueryResponse>(Config.WINDOWED_QUERY_FACADE_ADDRESS, Config.WINDOWED_QUERY_ADDRESS_PREFIX));
+                        new AllKeyValuesQueryVerticle(instanceId, res.result()),
+                        new RangeKeyValueQueryVerticle(instanceId, res.result()),
+                        new WindowedQueryVerticle(instanceId, res.result()),
+                        new KeyValueCountVerticle(instanceId, res.result()),
+                        new KeyBasedQueryFacadeVerticle<ScalarKeyValueQuery, ScalarKeyValueQueryResponse>(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, Config.KEY_VALUE_QUERY_ADDRESS_PREFIX),
+                        new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX, multiValuedIdentity, multiValuedReducer),
+                        new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX, multiValuedIdentity, multiValuedReducer),
+                        new KeyBasedQueryFacadeVerticle<WindowedQuery, WindowedQueryResponse>(Config.WINDOWED_QUERY_FACADE_ADDRESS, Config.WINDOWED_QUERY_ADDRESS_PREFIX)
+                        , new ScatterGatherQueryFacadeVerticle<Long>(Config.COUNT_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.COUNT_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> 0L, (a,b) -> a+b)
+                        );
 
 
 
@@ -244,6 +252,7 @@ public class RuntimeVerticle extends AbstractVerticle {
         registerCodec(StoreWideQuery.class);
         registerCodec(RangeKeyValueQuery.class);
         registerCodec(AllInstancesResponse.class);
+        registerCodec(KeyValueStoreCountQuery.class);
 
     }
 

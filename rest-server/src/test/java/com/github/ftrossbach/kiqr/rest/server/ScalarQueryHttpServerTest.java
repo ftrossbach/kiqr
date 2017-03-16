@@ -75,7 +75,7 @@ public class ScalarQueryHttpServerTest {
 
         });
 
-        rule.vertx().createHttpClient().get(5762, "localhost", String.format("/api/v1/kv/store/key?keySerde=%s&valueSerde=%s", Serdes.String().getClass().getName(), Serdes.Long().getClass().getName()), res ->{
+        rule.vertx().createHttpClient().get(5762, "localhost", String.format("/api/v1/kv/store/values/key?keySerde=%s&valueSerde=%s", Serdes.String().getClass().getName(), Serdes.Long().getClass().getName()), res ->{
 
             context.assertEquals(200, res.statusCode());
             async.complete();
@@ -94,7 +94,7 @@ public class ScalarQueryHttpServerTest {
 
         });
 
-        rule.vertx().createHttpClient().get(5762, "localhost", String.format("/api/v1/kv/store/key?keySerde=%s&valueSerde=%s", Serdes.String().getClass().getName(), Serdes.Long().getClass().getName()), res ->{
+        rule.vertx().createHttpClient().get(5762, "localhost", String.format("/api/v1/kv/store/values/key?keySerde=%s&valueSerde=%s", Serdes.String().getClass().getName(), Serdes.Long().getClass().getName()), res ->{
 
             context.assertEquals(404, res.statusCode());
             async.complete();
@@ -107,7 +107,7 @@ public class ScalarQueryHttpServerTest {
         Async async = context.async();
 
 
-        rule.vertx().createHttpClient().get(5762, "localhost", String.format("/api/v1/kv/store/key?valueSerde=%s", Serdes.Long().getClass().getName()), res ->{
+        rule.vertx().createHttpClient().get(5762, "localhost", String.format("/api/v1/kv/store/values/key?valueSerde=%s", Serdes.Long().getClass().getName()), res ->{
 
             context.assertEquals(400, res.statusCode());
             async.complete();
@@ -120,7 +120,7 @@ public class ScalarQueryHttpServerTest {
         Async async = context.async();
 
 
-        rule.vertx().createHttpClient().get(5762, "localhost", String.format("/api/v1/kv/store/key?keySerde=%s", Serdes.Long().getClass().getName()), res ->{
+        rule.vertx().createHttpClient().get(5762, "localhost", String.format("/api/v1/kv/store/values/key?keySerde=%s", Serdes.Long().getClass().getName()), res ->{
 
             context.assertEquals(400, res.statusCode());
             async.complete();
@@ -140,7 +140,7 @@ public class ScalarQueryHttpServerTest {
 
         });
 
-        rule.vertx().createHttpClient().get(5762, "localhost", String.format("/api/v1/kv/store/key?keySerde=%s&valueSerde=%s", Serdes.String().getClass().getName(), Serdes.Long().getClass().getName()), res ->{
+        rule.vertx().createHttpClient().get(5762, "localhost", String.format("/api/v1/kv/store/values/key?keySerde=%s&valueSerde=%s", Serdes.String().getClass().getName(), Serdes.Long().getClass().getName()), res ->{
 
             context.assertEquals(500, res.statusCode());
             async.complete();

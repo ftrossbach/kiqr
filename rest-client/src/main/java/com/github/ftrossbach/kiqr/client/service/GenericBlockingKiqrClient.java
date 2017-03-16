@@ -33,4 +33,6 @@ public interface GenericBlockingKiqrClient {
 
     <K,V> Map<Long,V> getWindow(String store, Class<K> keyClass, K key, Class<V> valueClass,Serde<K> keySerde,Serde<V> valueSerde, long from, long to);
 
+    Optional<Long> count(String store);
+
 }

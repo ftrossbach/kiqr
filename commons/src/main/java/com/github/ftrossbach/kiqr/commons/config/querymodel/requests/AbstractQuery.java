@@ -18,7 +18,7 @@ package com.github.ftrossbach.kiqr.commons.config.querymodel.requests;
 /**
  * Created by ftr on 20/02/2017.
  */
-public abstract class AbstractQuery {
+public abstract class AbstractQuery implements HasStoreName{
 
     private String storeName;
     private String keySerde;

@@ -50,7 +50,7 @@ public class ScatterGatherQueryFacadeVerticle<RES> extends AbstractVerticle {
     @Override
     public void start() throws Exception {
         vertx.eventBus().consumer(listeningAddress, msg -> {
-            AbstractQuery query = (AbstractQuery) msg.body();
+            HasStoreName query = (HasStoreName) msg.body();
 
 
             ShareableStreamsMetadataProvider metadataProvider = (ShareableStreamsMetadataProvider) vertx.sharedData().getLocalMap("metadata").get("metadata");

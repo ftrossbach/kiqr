@@ -1,12 +1,12 @@
 /**
  * Copyright © 2017 Florian Troßbach (trossbach@gmail.com)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,17 +50,18 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
     static String BASE_ROUTE_KV = "/api/v1/kv/:store";
     static String BASE_ROUTE_WINDOW = "/api/v1/window/:store";
 
-    public static class Builder extends RuntimeVerticle.Builder<RestKiqrServerVerticle.Builder>{
+    public static class Builder extends RuntimeVerticle.Builder<RestKiqrServerVerticle.Builder> {
 
         private HttpServerOptions httpServerOptions;
 
-        public static Builder serverBuilder(KStreamBuilder builder){
+        public static Builder serverBuilder(KStreamBuilder builder) {
             return new Builder(builder);
         }
 
-        public static Builder serverBuilder(KStreamBuilder builder, Properties props){
+        public static Builder serverBuilder(KStreamBuilder builder, Properties props) {
             return new Builder(builder, props);
         }
+
         protected Builder(KStreamBuilder builder) {
             super(builder);
         }
@@ -108,6 +109,7 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
         addRouteForScalarKVQueries(router);
 
         addRouteForWindowQueries(router);
+        addRouteForKVCountQueries(router);
 
         Future serverListener = Future.future();
 
@@ -118,17 +120,16 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
                 .actualPort();
 
 
-        CompositeFuture.all(runtimeVerticleCompleter, serverListener).setHandler(handler ->{
-           if(handler.succeeded()){
-               LOG.info("Started KafkaStreams and Webserver, listening on port " + port);
-               fut.complete();
-           } else {
-               LOG.error("Failure during startup", handler.cause());
-               fut.fail(handler.cause());
-           }
+        CompositeFuture.all(runtimeVerticleCompleter, serverListener).setHandler(handler -> {
+            if (handler.succeeded()) {
+                LOG.info("Started KafkaStreams and Webserver, listening on port " + port);
+                fut.complete();
+            } else {
+                LOG.error("Failure during startup", handler.cause());
+                fut.fail(handler.cause());
+            }
         });
     }
-
 
 
     private void addRouteForWindowQueries(Router router) {
@@ -145,12 +146,10 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
 
             if (keySerde == null || valueSerde == null) {
                 routingContext.fail(400);
-            }
-            else if (from == null || to == null) {
+            } else if (from == null || to == null) {
                 routingContext.fail(400);
             } else {
-                WindowedQuery query = new WindowedQuery(store, keySerde, key,valueSerde, Long.valueOf(from), Long.valueOf(to));
-
+                WindowedQuery query = new WindowedQuery(store, keySerde, key, valueSerde, Long.valueOf(from), Long.valueOf(to));
 
 
                 vertx.eventBus().send(Config.WINDOWED_QUERY_FACADE_ADDRESS, query, new DeliveryOptions().setSendTimeout(TIMEOUT), reply -> {
@@ -173,7 +172,7 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
     }
 
     private void addRouteForScalarKVQueries(Router router) {
-        router.route(RestKiqrServerVerticle.BASE_ROUTE_KV + "/:key").handler(routingContext -> {
+        router.route(RestKiqrServerVerticle.BASE_ROUTE_KV + "/values/:key").handler(routingContext -> {
 
 
             HttpServerRequest request = routingContext.request();
@@ -183,14 +182,14 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
             String store = request.getParam("store");
             byte[] key = Base64.getDecoder().decode(request.getParam("key"));
 
-            if(keySerde == null || valueSerde == null){
+            if (keySerde == null || valueSerde == null) {
                 routingContext.fail(400);
             } else {
                 ScalarKeyValueQuery query = new ScalarKeyValueQuery(store, keySerde, key, valueSerde);
 
 
                 vertx.eventBus().send(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, query, new DeliveryOptions().setSendTimeout(TIMEOUT), reply -> {
-                    if(reply.succeeded()){
+                    if (reply.succeeded()) {
                         ScalarKeyValueQueryResponse body = (ScalarKeyValueQueryResponse) reply.result().body();
                         HttpServerResponse response = routingContext.response();
                         System.out.println(reply.result().body());
@@ -210,6 +209,37 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
 
         });
     }
+
+    private void addRouteForKVCountQueries(Router router) {
+        router.route(RestKiqrServerVerticle.BASE_ROUTE_KV + "/count").handler(routingContext -> {
+
+
+            HttpServerRequest request = routingContext.request();
+            String store = request.getParam("store");
+
+            KeyValueStoreCountQuery query = new KeyValueStoreCountQuery(store);
+
+
+            vertx.eventBus().send(Config.COUNT_KEY_VALUE_QUERY_FACADE_ADDRESS, query, new DeliveryOptions().setSendTimeout(TIMEOUT), reply -> {
+                if (reply.succeeded()) {
+                    Long body = (Long) reply.result().body();
+                    HttpServerResponse response = routingContext.response();
+                    response
+                            .putHeader("content-type", "application/json")
+                            .end((new JsonObject().put("count", body)).encode());
+
+
+                } else {
+
+                    reply.cause().printStackTrace();
+                    forwardErrorCode(routingContext, reply);
+                }
+            });
+
+
+        });
+    }
+
 
     private void forwardErrorCode(RoutingContext routingContext, AsyncResult<Message<Object>> reply) {
         ReplyException ex = (ReplyException) reply.cause();
@@ -231,11 +261,13 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
             String from = request.getParam("from");
             String to = request.getParam("to");
 
+
             if (keySerde == null || valueSerde == null) {
                 routingContext.fail(400);
             } else {
                 Object query;
                 String address;
+
 
                 if (from == null && to == null) {
 
