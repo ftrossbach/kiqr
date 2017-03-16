@@ -15,25 +15,33 @@
  */
 package com.github.ftrossbach.kiqr.commons.config.querymodel.requests;
 
+
+
+import java.util.SortedMap;
+
 /**
  * Created by ftr on 20/02/2017.
  */
-public class ScalarKeyValueQuery extends AbstractQuery implements HasKey{
+public class SessionQueryResponse {
 
-    private byte[] key;
 
-    public ScalarKeyValueQuery(){}
 
-    public ScalarKeyValueQuery(String storeName, String keySerde, byte[] key, String valueSerde) {
-        super(storeName, keySerde, valueSerde);
-        this.key = key;
+    private SortedMap<Window, String> values;
+
+    public SessionQueryResponse() {
+
     }
 
-    public byte[] getKey() {
-        return key;
+    public SessionQueryResponse(SortedMap<Window, String> values) {
+
+        this.values = values;
     }
 
-    public void setKey(byte[] key) {
-        this.key = key;
+    public void setValues(SortedMap<Window, String> values) {
+        this.values = values;
+    }
+
+    public SortedMap<Window, String> getValues() {
+        return values;
     }
 }

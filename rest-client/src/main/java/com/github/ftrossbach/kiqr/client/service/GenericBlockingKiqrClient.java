@@ -15,6 +15,7 @@
  */
 package com.github.ftrossbach.kiqr.client.service;
 
+import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.Window;
 import org.apache.kafka.common.serialization.Serde;
 
 import java.util.Map;
@@ -34,5 +35,7 @@ public interface GenericBlockingKiqrClient {
     <K,V> Map<Long,V> getWindow(String store, Class<K> keyClass, K key, Class<V> valueClass,Serde<K> keySerde,Serde<V> valueSerde, long from, long to);
 
     Optional<Long> count(String store);
+
+    <K,V> Map<Window, V> getSession(String store, Class<K> keyClass, K key, Class<V> valueClass, Serde<K> keySerde,Serde<V> valueSerde);
 
 }

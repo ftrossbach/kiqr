@@ -1,16 +1,10 @@
 package com.github.ftrossbach.kiqr.core.query.kv;
 
 import com.github.ftrossbach.kiqr.commons.config.Config;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.AbstractQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.KeyValueStoreCountQuery;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQuery;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQueryResponse;
 import com.github.ftrossbach.kiqr.core.query.AbstractQueryVerticle;
-import com.github.ftrossbach.kiqr.core.query.exceptions.ScalarValueNotFoundException;
-import com.github.ftrossbach.kiqr.core.query.exceptions.SerdeNotFoundException;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.errors.InvalidStateStoreException;
 import org.apache.kafka.streams.state.QueryableStoreTypes;

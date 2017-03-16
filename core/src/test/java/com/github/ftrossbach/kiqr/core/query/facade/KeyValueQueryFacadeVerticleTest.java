@@ -31,9 +31,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Optional;
 
 
 import static org.mockito.Matchers.any;
@@ -51,7 +49,7 @@ public class KeyValueQueryFacadeVerticleTest {
 
     @Before
     public void setUp(){
-        rule.vertx().eventBus().registerDefaultCodec(ScalarKeyValueQuery.class, new KiqrCodec(ScalarKeyValueQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(KeyBasedQuery.class, new KiqrCodec(KeyBasedQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(ScalarKeyValueQueryResponse.class, new KiqrCodec(ScalarKeyValueQueryResponse.class));
 
     }
@@ -68,9 +66,9 @@ public class KeyValueQueryFacadeVerticleTest {
            msg.reply(new ScalarKeyValueQueryResponse("value"));
         });
 
-        rule.vertx().deployVerticle(new KeyBasedQueryFacadeVerticle<ScalarKeyValueQuery, ScalarKeyValueQueryResponse>(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, Config.KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new KeyBasedQueryFacadeVerticle<KeyBasedQuery, ScalarKeyValueQueryResponse>(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, Config.KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
 
-            ScalarKeyValueQuery query = new ScalarKeyValueQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
+            KeyBasedQuery query = new KeyBasedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, query, context.asyncAssertSuccess(reply ->{
 
@@ -98,9 +96,9 @@ public class KeyValueQueryFacadeVerticleTest {
             msg.fail(400, "msg");
         });
 
-        rule.vertx().deployVerticle(new KeyBasedQueryFacadeVerticle<ScalarKeyValueQuery, ScalarKeyValueQueryResponse>(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, Config.KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new KeyBasedQueryFacadeVerticle<KeyBasedQuery, ScalarKeyValueQueryResponse>(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, Config.KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
 
-            ScalarKeyValueQuery query = new ScalarKeyValueQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
+            KeyBasedQuery query = new KeyBasedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, query, context.asyncAssertFailure(handler ->{
 
@@ -123,9 +121,9 @@ public class KeyValueQueryFacadeVerticleTest {
         rule.vertx().sharedData().getLocalMap("metadata").put("metadata", mock);
 
 
-        rule.vertx().deployVerticle(new KeyBasedQueryFacadeVerticle<ScalarKeyValueQuery, ScalarKeyValueQueryResponse>(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, Config.KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new KeyBasedQueryFacadeVerticle<KeyBasedQuery, ScalarKeyValueQueryResponse>(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, Config.KEY_VALUE_QUERY_ADDRESS_PREFIX), context.asyncAssertSuccess(deployment->{
 
-            ScalarKeyValueQuery query = new ScalarKeyValueQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
+            KeyBasedQuery query = new KeyBasedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, query, context.asyncAssertFailure(handler ->{
 

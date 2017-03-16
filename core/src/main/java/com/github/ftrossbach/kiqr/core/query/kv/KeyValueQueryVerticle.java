@@ -16,14 +16,11 @@
 package com.github.ftrossbach.kiqr.core.query.kv;
 
 import com.github.ftrossbach.kiqr.commons.config.Config;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQuery;
+import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.KeyBasedQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQueryResponse;
 import com.github.ftrossbach.kiqr.core.query.AbstractQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.exceptions.ScalarValueNotFoundException;
-import com.github.ftrossbach.kiqr.core.query.exceptions.SerdeNotFoundException;
-import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.errors.InvalidStateStoreException;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 
@@ -43,7 +40,7 @@ public class KeyValueQueryVerticle extends AbstractQueryVerticle {
     public void start() throws Exception {
 
         execute(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX, (abstractQuery, keySerde, valueSerde) -> {
-            ScalarKeyValueQuery query = (ScalarKeyValueQuery) abstractQuery;
+            KeyBasedQuery query = (KeyBasedQuery) abstractQuery;
 
             Object deserializedKey = deserializeObject(keySerde, query.getKey());
             ReadOnlyKeyValueStore<Object, Object> kvStore = streams.store(query.getStoreName(), QueryableStoreTypes.keyValueStore());

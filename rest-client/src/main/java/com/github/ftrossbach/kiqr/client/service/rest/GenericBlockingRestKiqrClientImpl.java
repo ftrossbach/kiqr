@@ -19,9 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.ftrossbach.kiqr.client.service.GenericBlockingKiqrClient;
 import com.github.ftrossbach.kiqr.client.service.ConnectionException;
 import com.github.ftrossbach.kiqr.client.service.QueryExecutionException;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.MultiValuedKeyValueQueryResponse;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQueryResponse;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.WindowedQueryResponse;
+import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
@@ -154,6 +152,24 @@ public class GenericBlockingRestKiqrClientImpl implements GenericBlockingKiqrCli
 
 
         }, () -> Optional.empty());
+    }
+
+    @Override
+    public <K, V> Map<Window, V> getSession(String store, Class<K> keyClass, K key, Class<V> valueClass, Serde<K> keySerde, Serde<V> valueSerde) {
+        return execute(() -> getUriBuilder()
+                .setPath(String.format("/api/v1/session/%s/%s", store, Base64.getEncoder().encodeToString(keySerde.serializer().serialize("", key))))
+                .addParameter("keySerde", keySerde.getClass().getName())
+                .addParameter("valueSerde", valueSerde.getClass().getName())
+                .build(), bytes -> {
+            SessionQueryResponse resp = mapper.readValue(bytes, SessionQueryResponse.class);
+
+
+            return new TreeMap<Window, V>(resp.getValues().entrySet().stream()
+                    .map(entry -> {
+                        return new Pair<Window, V>(entry.getKey(),
+                                deserialize(valueClass, valueSerde, entry.getValue()));
+                    }).collect(Collectors.toMap(Pair::getKey, pair -> pair.getValue())));
+        }, () -> Collections.emptyMap());
     }
 
 

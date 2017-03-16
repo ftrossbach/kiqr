@@ -25,6 +25,7 @@ import com.github.ftrossbach.kiqr.core.query.kv.AllKeyValuesQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.kv.KeyValueCountVerticle;
 import com.github.ftrossbach.kiqr.core.query.kv.KeyValueQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.kv.RangeKeyValueQueryVerticle;
+import com.github.ftrossbach.kiqr.core.query.session.SessionWindowQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.windowed.WindowedQueryVerticle;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
@@ -168,17 +169,20 @@ public class RuntimeVerticle extends AbstractVerticle {
 
                 Supplier<MultiValuedKeyValueQueryResponse> multiValuedIdentity = () -> new MultiValuedKeyValueQueryResponse();
                 BinaryOperator<MultiValuedKeyValueQueryResponse> multiValuedReducer = (a, b) -> a.merge(b);
-                Future deployFuture = deployVerticles(new KeyValueQueryVerticle(instanceId, res.result()),
-                        new AllKeyValuesQueryVerticle(instanceId, res.result()),
-                        new RangeKeyValueQueryVerticle(instanceId, res.result()),
-                        new WindowedQueryVerticle(instanceId, res.result()),
-                        new KeyValueCountVerticle(instanceId, res.result()),
-                        new KeyBasedQueryFacadeVerticle<ScalarKeyValueQuery, ScalarKeyValueQueryResponse>(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, Config.KEY_VALUE_QUERY_ADDRESS_PREFIX),
+                KafkaStreams stream = res.result();
+                Future deployFuture = deployVerticles(new KeyValueQueryVerticle(instanceId, stream),
+                        new AllKeyValuesQueryVerticle(instanceId, stream),
+                        new RangeKeyValueQueryVerticle(instanceId, stream),
+                        new WindowedQueryVerticle(instanceId, stream),
+                        new KeyValueCountVerticle(instanceId, stream),
+                        new SessionWindowQueryVerticle(instanceId, stream),
+                        new KeyBasedQueryFacadeVerticle<KeyBasedQuery, ScalarKeyValueQueryResponse>(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, Config.KEY_VALUE_QUERY_ADDRESS_PREFIX),
                         new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.ALL_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.ALL_KEY_VALUE_QUERY_ADDRESS_PREFIX, multiValuedIdentity, multiValuedReducer),
                         new ScatterGatherQueryFacadeVerticle<MultiValuedKeyValueQueryResponse>(Config.RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX, multiValuedIdentity, multiValuedReducer),
-                        new KeyBasedQueryFacadeVerticle<WindowedQuery, WindowedQueryResponse>(Config.WINDOWED_QUERY_FACADE_ADDRESS, Config.WINDOWED_QUERY_ADDRESS_PREFIX)
-                        , new ScatterGatherQueryFacadeVerticle<Long>(Config.COUNT_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.COUNT_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> 0L, (a,b) -> a+b)
-                        );
+                        new KeyBasedQueryFacadeVerticle<WindowedQuery, WindowedQueryResponse>(Config.WINDOWED_QUERY_FACADE_ADDRESS, Config.WINDOWED_QUERY_ADDRESS_PREFIX),
+                        new ScatterGatherQueryFacadeVerticle<Long>(Config.COUNT_KEY_VALUE_QUERY_FACADE_ADDRESS, Config.COUNT_KEY_VALUE_QUERY_ADDRESS_PREFIX, () -> 0L, (a,b) -> a+b),
+                        new KeyBasedQueryFacadeVerticle<KeyBasedQuery, SessionQueryResponse>(Config.SESSION_QUERY_FACADE_ADDRESS, Config.SESSION_QUERY_ADDRESS_PREFIX)
+                );
 
 
 
@@ -244,7 +248,7 @@ public class RuntimeVerticle extends AbstractVerticle {
 
 
     private void registerCodecs() {
-        registerCodec(ScalarKeyValueQuery.class);
+        registerCodec(KeyBasedQuery.class);
         registerCodec(WindowedQuery.class);
         registerCodec(ScalarKeyValueQueryResponse.class);
         registerCodec(MultiValuedKeyValueQueryResponse.class);
@@ -253,6 +257,7 @@ public class RuntimeVerticle extends AbstractVerticle {
         registerCodec(RangeKeyValueQuery.class);
         registerCodec(AllInstancesResponse.class);
         registerCodec(KeyValueStoreCountQuery.class);
+        registerCodec(SessionQueryResponse.class);
 
     }
 

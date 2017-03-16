@@ -49,6 +49,7 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
 
     static String BASE_ROUTE_KV = "/api/v1/kv/:store";
     static String BASE_ROUTE_WINDOW = "/api/v1/window/:store";
+    static String BASE_ROUTE_SESSION = "/api/v1/session/:store";
 
     public static class Builder extends RuntimeVerticle.Builder<RestKiqrServerVerticle.Builder> {
 
@@ -110,6 +111,7 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
 
         addRouteForWindowQueries(router);
         addRouteForKVCountQueries(router);
+        addRouteForSessionQueries(router);
 
         Future serverListener = Future.future();
 
@@ -171,6 +173,42 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
         });
     }
 
+    private void addRouteForSessionQueries(Router router) {
+        router.route(RestKiqrServerVerticle.BASE_ROUTE_SESSION + "/:key").handler(routingContext -> {
+
+            HttpServerRequest request = routingContext.request();
+
+            String keySerde = request.getParam("keySerde");
+            String valueSerde = request.getParam("valueSerde");
+            String store = request.getParam("store");
+            byte[] key = Base64.getDecoder().decode(request.getParam("key"));
+
+            if (keySerde == null || valueSerde == null) {
+                routingContext.fail(400);
+
+            } else {
+                KeyBasedQuery query = new KeyBasedQuery(store, keySerde, key, valueSerde);
+
+
+                vertx.eventBus().send(Config.SESSION_QUERY_FACADE_ADDRESS, query, new DeliveryOptions().setSendTimeout(TIMEOUT), reply -> {
+                    if (reply.succeeded()) {
+                        SessionQueryResponse body = (SessionQueryResponse) reply.result().body();
+
+                        HttpServerResponse response = routingContext.response();
+                        response
+                                .putHeader("content-type", "application/json")
+                                .end(Json.encode(body));
+
+
+                    } else {
+                        forwardErrorCode(routingContext, reply);
+                    }
+                });
+            }
+
+        });
+    }
+
     private void addRouteForScalarKVQueries(Router router) {
         router.route(RestKiqrServerVerticle.BASE_ROUTE_KV + "/values/:key").handler(routingContext -> {
 
@@ -185,7 +223,7 @@ public class RestKiqrServerVerticle extends AbstractVerticle {
             if (keySerde == null || valueSerde == null) {
                 routingContext.fail(400);
             } else {
-                ScalarKeyValueQuery query = new ScalarKeyValueQuery(store, keySerde, key, valueSerde);
+                KeyBasedQuery query = new KeyBasedQuery(store, keySerde, key, valueSerde);
 
 
                 vertx.eventBus().send(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, query, new DeliveryOptions().setSendTimeout(TIMEOUT), reply -> {

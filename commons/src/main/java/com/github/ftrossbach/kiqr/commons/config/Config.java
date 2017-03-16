@@ -30,12 +30,14 @@ public class Config {
     public static String RANGE_KEY_VALUE_QUERY_ADDRESS_PREFIX = "com.github.ftrossbach.kiqr.core.query.range_kv.";
     public static String COUNT_KEY_VALUE_QUERY_ADDRESS_PREFIX = "com.github.ftrossbach.kiqr.core.query.count_kv.";
     public static String WINDOWED_QUERY_ADDRESS_PREFIX = "com.github.ftrossbach.kiqr.core.query.window.";
+    public static String SESSION_QUERY_ADDRESS_PREFIX = "com.github.ftrossbach.kiqr.core.query.session..";
 
     public static String KEY_VALUE_QUERY_FACADE_ADDRESS = "com.github.ftrossbach.kiqr.core.query.facade.kv";
     public static String ALL_KEY_VALUE_QUERY_FACADE_ADDRESS = "com.github.ftrossbach.kiqr.core.query.facade.all_kv";
     public static String RANGE_KEY_VALUE_QUERY_FACADE_ADDRESS = "com.github.ftrossbach.kiqr.core.query.facade.range_kv";
     public static String COUNT_KEY_VALUE_QUERY_FACADE_ADDRESS = "com.github.ftrossbach.kiqr.core.query.facade.count";
     public static String WINDOWED_QUERY_FACADE_ADDRESS = "com.github.ftrossbach.kiqr.core.query.facade.window";
+    public static String SESSION_QUERY_FACADE_ADDRESS = "com.github.ftrossbach.kiqr.core.query.facade.session";
 
     public static String CLUSTER_STATE_BROADCAST_ADDRESS = "com.github.ftrossbach.kiqr.core.cluster.state";
 }

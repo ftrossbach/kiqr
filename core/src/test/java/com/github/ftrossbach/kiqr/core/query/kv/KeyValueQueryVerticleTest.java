@@ -18,16 +18,13 @@ package com.github.ftrossbach.kiqr.core.query.kv;
 import com.github.ftrossbach.kiqr.commons.config.Config;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
 import com.github.ftrossbach.kiqr.core.query.KiqrCodec;
-import com.github.ftrossbach.kiqr.core.query.SimpleKeyValueIterator;
 import io.vertx.core.eventbus.ReplyException;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.errors.InvalidStateStoreException;
-import org.apache.kafka.streams.state.KeyValueIterator;
 import org.apache.kafka.streams.state.QueryableStoreType;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 import org.junit.Before;
@@ -52,7 +49,7 @@ public class KeyValueQueryVerticleTest {
 
     @Before
     public void setUp(){
-        rule.vertx().eventBus().registerDefaultCodec(ScalarKeyValueQuery.class, new KiqrCodec(ScalarKeyValueQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(KeyBasedQuery.class, new KiqrCodec(KeyBasedQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(ScalarKeyValueQueryResponse.class, new KiqrCodec(ScalarKeyValueQueryResponse.class));
     }
 
@@ -70,7 +67,7 @@ public class KeyValueQueryVerticleTest {
 
         rule.vertx().deployVerticle(new KeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
-            ScalarKeyValueQuery query = new ScalarKeyValueQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
+            KeyBasedQuery query = new KeyBasedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertSuccess(reply ->{
 
@@ -99,7 +96,7 @@ public class KeyValueQueryVerticleTest {
 
         rule.vertx().deployVerticle(new KeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
-            ScalarKeyValueQuery query = new ScalarKeyValueQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
+            KeyBasedQuery query = new KeyBasedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertFailure(handler ->{
 
@@ -125,7 +122,7 @@ public class KeyValueQueryVerticleTest {
 
         rule.vertx().deployVerticle(new KeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
-            ScalarKeyValueQuery query = new ScalarKeyValueQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
+            KeyBasedQuery query = new KeyBasedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertFailure(handler ->{
 
@@ -151,7 +148,7 @@ public class KeyValueQueryVerticleTest {
         when(storeMock.get(any())).thenThrow(InvalidStateStoreException.class);
         rule.vertx().deployVerticle(new KeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
-            ScalarKeyValueQuery query = new ScalarKeyValueQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
+            KeyBasedQuery query = new KeyBasedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertFailure(handler ->{
 
@@ -177,7 +174,7 @@ public class KeyValueQueryVerticleTest {
         when(storeMock.get(any())).thenThrow(IllegalArgumentException.class);
         rule.vertx().deployVerticle(new KeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
-            ScalarKeyValueQuery query = new ScalarKeyValueQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
+            KeyBasedQuery query = new KeyBasedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertFailure(handler ->{
 
@@ -203,7 +200,7 @@ public class KeyValueQueryVerticleTest {
         when(storeMock.get(any())).thenThrow(IllegalArgumentException.class);
         rule.vertx().deployVerticle(new KeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
-            ScalarKeyValueQuery query = new ScalarKeyValueQuery("store", "i am not a serde", "key".getBytes(), Serdes.String().getClass().getName());
+            KeyBasedQuery query = new KeyBasedQuery("store", "i am not a serde", "key".getBytes(), Serdes.String().getClass().getName());
 
             rule.vertx().eventBus().send(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertFailure(handler ->{
 
@@ -229,7 +226,7 @@ public class KeyValueQueryVerticleTest {
         when(storeMock.get(any())).thenThrow(IllegalArgumentException.class);
         rule.vertx().deployVerticle(new KeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
-            ScalarKeyValueQuery query = new ScalarKeyValueQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), "i am not a serde");
+            KeyBasedQuery query = new KeyBasedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), "i am not a serde");
 
             rule.vertx().eventBus().send(Config.KEY_VALUE_QUERY_ADDRESS_PREFIX + "host", query, context.asyncAssertFailure(handler ->{
 

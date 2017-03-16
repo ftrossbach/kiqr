@@ -18,7 +18,7 @@ package com.github.ftrossbach.kiqr.client.service.rest;
 import com.github.ftrossbach.kiqr.client.service.ConnectionException;
 import com.github.ftrossbach.kiqr.client.service.QueryExecutionException;
 import com.github.ftrossbach.kiqr.commons.config.Config;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQuery;
+import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.KeyBasedQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQueryResponse;
 import com.github.ftrossbach.kiqr.core.query.KiqrCodec;
 import io.vertx.core.http.HttpServerOptions;
@@ -49,7 +49,7 @@ public class ScalarKVQueryBlockingRestKiqrServiceImplTest {
 
     @Before
     public void setUp(){
-        rule.vertx().eventBus().registerDefaultCodec(ScalarKeyValueQuery.class, new KiqrCodec(ScalarKeyValueQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(KeyBasedQuery.class, new KiqrCodec(KeyBasedQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(ScalarKeyValueQueryResponse.class, new KiqrCodec(ScalarKeyValueQueryResponse.class));
 
 

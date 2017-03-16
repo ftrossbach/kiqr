@@ -16,7 +16,7 @@
 package com.github.ftrossbach.kiqr.rest.server;
 
 import com.github.ftrossbach.kiqr.commons.config.Config;
-import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQuery;
+import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.KeyBasedQuery;
 import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.ScalarKeyValueQueryResponse;
 import com.github.ftrossbach.kiqr.core.RuntimeVerticle;
 import com.github.ftrossbach.kiqr.core.query.KiqrCodec;
@@ -45,7 +45,7 @@ public class ScalarQueryHttpServerTest {
 
     @Before
     public void setUp(TestContext context) throws Exception{
-        rule.vertx().eventBus().registerDefaultCodec(ScalarKeyValueQuery.class, new KiqrCodec(ScalarKeyValueQuery.class));
+        rule.vertx().eventBus().registerDefaultCodec(KeyBasedQuery.class, new KiqrCodec(KeyBasedQuery.class));
         rule.vertx().eventBus().registerDefaultCodec(ScalarKeyValueQueryResponse.class, new KiqrCodec(ScalarKeyValueQueryResponse.class));
 
 
@@ -63,8 +63,8 @@ public class ScalarQueryHttpServerTest {
 
 
         rule.vertx().eventBus().consumer(Config.KEY_VALUE_QUERY_FACADE_ADDRESS, msg -> {
-            context.assertTrue(msg.body() instanceof ScalarKeyValueQuery);
-            ScalarKeyValueQuery query = (ScalarKeyValueQuery) msg.body();
+            context.assertTrue(msg.body() instanceof KeyBasedQuery);
+            KeyBasedQuery query = (KeyBasedQuery) msg.body();
 
             context.assertEquals("store", query.getStoreName());
             context.assertEquals(Serdes.String().getClass().getName(), query.getKeySerde());
