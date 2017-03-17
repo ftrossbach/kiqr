@@ -27,10 +27,10 @@ import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 /**
  * Created by ftr on 19/02/2017.
  */
-public class KeyValueQueryVerticle extends AbstractQueryVerticle {
+public class ScalarKeyValueQueryVerticle extends AbstractQueryVerticle {
 
 
-    public KeyValueQueryVerticle(String instanceId, KafkaStreams streams) {
+    public ScalarKeyValueQueryVerticle(String instanceId, KafkaStreams streams) {
         super(instanceId, streams);
     }
 

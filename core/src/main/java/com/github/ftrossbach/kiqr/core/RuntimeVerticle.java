@@ -23,7 +23,7 @@ import com.github.ftrossbach.kiqr.core.query.facade.KeyBasedQueryFacadeVerticle;
 import com.github.ftrossbach.kiqr.core.query.facade.ScatterGatherQueryFacadeVerticle;
 import com.github.ftrossbach.kiqr.core.query.kv.AllKeyValuesQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.kv.KeyValueCountVerticle;
-import com.github.ftrossbach.kiqr.core.query.kv.KeyValueQueryVerticle;
+import com.github.ftrossbach.kiqr.core.query.kv.ScalarKeyValueQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.kv.RangeKeyValueQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.session.SessionWindowQueryVerticle;
 import com.github.ftrossbach.kiqr.core.query.windowed.WindowedQueryVerticle;
@@ -170,7 +170,7 @@ public class RuntimeVerticle extends AbstractVerticle {
                 Supplier<MultiValuedKeyValueQueryResponse> multiValuedIdentity = () -> new MultiValuedKeyValueQueryResponse();
                 BinaryOperator<MultiValuedKeyValueQueryResponse> multiValuedReducer = (a, b) -> a.merge(b);
                 KafkaStreams stream = res.result();
-                Future deployFuture = deployVerticles(new KeyValueQueryVerticle(instanceId, stream),
+                Future deployFuture = deployVerticles(new ScalarKeyValueQueryVerticle(instanceId, stream),
                         new AllKeyValuesQueryVerticle(instanceId, stream),
                         new RangeKeyValueQueryVerticle(instanceId, stream),
                         new WindowedQueryVerticle(instanceId, stream),

@@ -42,7 +42,7 @@ import static org.mockito.Mockito.when;
  * Created by ftr on 05/03/2017.
  */
 @RunWith(VertxUnitRunner.class)
-public class KeyValueQueryVerticleTest {
+public class ScalarKeyValueQueryVerticleTest {
 
     @Rule
     public RunTestOnContext rule = new RunTestOnContext();
@@ -65,7 +65,7 @@ public class KeyValueQueryVerticleTest {
         when(storeMock.get("key")).thenReturn("value");
 
 
-        rule.vertx().deployVerticle(new KeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScalarKeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
             KeyBasedQuery query = new KeyBasedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
@@ -94,7 +94,7 @@ public class KeyValueQueryVerticleTest {
         when(storeMock.get("key")).thenReturn(null);
 
 
-        rule.vertx().deployVerticle(new KeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScalarKeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
             KeyBasedQuery query = new KeyBasedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
@@ -120,7 +120,7 @@ public class KeyValueQueryVerticleTest {
         when(streamMock.store(eq("store"), any(QueryableStoreType.class))).thenThrow(InvalidStateStoreException.class);
 
 
-        rule.vertx().deployVerticle(new KeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScalarKeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
             KeyBasedQuery query = new KeyBasedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
@@ -146,7 +146,7 @@ public class KeyValueQueryVerticleTest {
 
         when(streamMock.store(eq("store"), any(QueryableStoreType.class))).thenReturn(storeMock);
         when(storeMock.get(any())).thenThrow(InvalidStateStoreException.class);
-        rule.vertx().deployVerticle(new KeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScalarKeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
             KeyBasedQuery query = new KeyBasedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
@@ -172,7 +172,7 @@ public class KeyValueQueryVerticleTest {
 
         when(streamMock.store(eq("store"), any(QueryableStoreType.class))).thenReturn(storeMock);
         when(storeMock.get(any())).thenThrow(IllegalArgumentException.class);
-        rule.vertx().deployVerticle(new KeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScalarKeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
             KeyBasedQuery query = new KeyBasedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), Serdes.String().getClass().getName());
 
@@ -198,7 +198,7 @@ public class KeyValueQueryVerticleTest {
 
         when(streamMock.store(eq("store"), any(QueryableStoreType.class))).thenReturn(storeMock);
         when(storeMock.get(any())).thenThrow(IllegalArgumentException.class);
-        rule.vertx().deployVerticle(new KeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScalarKeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
             KeyBasedQuery query = new KeyBasedQuery("store", "i am not a serde", "key".getBytes(), Serdes.String().getClass().getName());
 
@@ -224,7 +224,7 @@ public class KeyValueQueryVerticleTest {
 
         when(streamMock.store(eq("store"), any(QueryableStoreType.class))).thenReturn(storeMock);
         when(storeMock.get(any())).thenThrow(IllegalArgumentException.class);
-        rule.vertx().deployVerticle(new KeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
+        rule.vertx().deployVerticle(new ScalarKeyValueQueryVerticle("host", streamMock), context.asyncAssertSuccess(deployment->{
 
             KeyBasedQuery query = new KeyBasedQuery("store", Serdes.String().getClass().getName(), "key".getBytes(), "i am not a serde");
 
