@@ -81,6 +81,9 @@ GenericBlockingKiqrClient client = new GenericBlockingRestKiqrClientImpl("localh
 //querying key "key1" from key-value store "kv" with String keys and Long values
 Optional<Long> result = client.getScalarKeyValue("kv", String.class, "key1", Long.class, Serdes.String(), Serdes.Long());
 
+//querying count of entries from key-value store "kv"
+Optional<Long> result = client.count("kv");
+
 //querying all keys from store "kv" with String keys and Long values
 Map<String, Long> result = client.getAllKeyValues("kv", String.class, Long.class, Serdes.String(), Serdes.Long());
 
@@ -113,7 +116,6 @@ Map<Long, Long> result = client.getWindow("key1", 1L, 1000L);
 
 ## Caveats and restrictions
 
-* No support for Session Window queries and count queries on key-value stores (no particular reason other than time)
 * not very well integrationally tested (yet? it is a hobby project)
 * not HA (when the streams app is rebalancing, there is not much you can do at this point)
 * No streaming of large results - if you query too much data, things will probably get weird.

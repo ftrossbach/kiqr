@@ -143,7 +143,6 @@ public class GenericClientDistributedIntegrationITCase {
 
         KStream<String, Long> kv = builder.stream(Serdes.String(), Serdes.Long(), TOPIC);
 
-
         KGroupedStream<String, Long> group = kv.groupBy((k,v) -> k, Serdes.String(), Serdes.Long());
         group.reduce((a,b) -> a, "kv");
         group.count(SessionWindows.with(60 * 1000), "session");

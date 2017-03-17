@@ -2,6 +2,7 @@ package com.github.ftrossbach.kiqr.client.service.rest;
 
 import com.github.ftrossbach.kiqr.client.service.GenericBlockingKiqrClient;
 import com.github.ftrossbach.kiqr.client.service.SpecificBlockingKiqrClient;
+import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.Window;
 import org.apache.kafka.common.serialization.Serde;
 import java.util.Map;
 import java.util.Optional;
@@ -61,5 +62,15 @@ public class SpecificBlockingRestKiqrClientImpl<K,V> implements SpecificBlocking
     @Override
     public  Map<Long, V> getWindow( K key, long from, long to) {
         return genericClient.getWindow(store, keyClass, key, valueClass, keySerde, valueSerde, from, to);
+    }
+
+    @Override
+    public Optional<Long> count(String store) {
+        return genericClient.count(store);
+    }
+
+    @Override
+    public Map<Window, V> getSession(K key) {
+        return genericClient.getSession(store, keyClass, key, valueClass, keySerde, valueSerde);
     }
 }

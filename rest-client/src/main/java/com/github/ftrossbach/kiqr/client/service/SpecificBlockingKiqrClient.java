@@ -1,5 +1,6 @@
 package com.github.ftrossbach.kiqr.client.service;
 
+import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.Window;
 import org.apache.kafka.common.serialization.Serde;
 import java.util.Map;
 import java.util.Optional;
@@ -16,5 +17,9 @@ public interface SpecificBlockingKiqrClient<K,V> {
     Map<K,V> getRangeKeyValues(K from, K to);
 
     Map<Long,V> getWindow(K key, long from, long to);
+
+    Optional<Long> count(String store);
+
+    Map<Window, V> getSession(K key);
 
 }
