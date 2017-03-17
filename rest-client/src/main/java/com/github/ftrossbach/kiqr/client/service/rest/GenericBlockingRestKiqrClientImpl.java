@@ -164,10 +164,14 @@ public class GenericBlockingRestKiqrClientImpl implements GenericBlockingKiqrCli
             SessionQueryResponse resp = mapper.readValue(bytes, SessionQueryResponse.class);
 
 
-            return new TreeMap<Window, V>(resp.getValues().entrySet().stream()
-                    .map(entry -> {
-                        return new Pair<Window, V>(entry.getKey(),
-                                deserialize(valueClass, valueSerde, entry.getValue()));
+
+
+
+
+            return new TreeMap<Window, V>(resp.getValues().stream()
+                    .map(window -> {
+                        return new Pair<Window, V>(window,
+                                deserialize(valueClass, valueSerde,window.getValue()));
                     }).collect(Collectors.toMap(Pair::getKey, pair -> pair.getValue())));
         }, () -> Collections.emptyMap());
     }

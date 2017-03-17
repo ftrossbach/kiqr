@@ -15,6 +15,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.*;
 import org.junit.AfterClass;
@@ -137,9 +138,14 @@ public class GenericClientDistributedIntegrationITCase {
 
 
         KStreamBuilder builder = new KStreamBuilder();
-        KTable<String, Long> kv = builder.table(Serdes.String(), Serdes.Long(), TOPIC, "kv");
+       // KTable<String, Long> kv = builder.table(Serdes.String(), Serdes.Long(), TOPIC, "kv");
 
-        KGroupedStream<String, Long> group = kv.toStream().groupByKey();
+
+        KStream<String, Long> kv = builder.stream(Serdes.String(), Serdes.Long(), TOPIC);
+
+
+        KGroupedStream<String, Long> group = kv.groupBy((k,v) -> k, Serdes.String(), Serdes.Long());
+        group.reduce((a,b) -> a, "kv");
         group.count(SessionWindows.with(60 * 1000), "session");
         group.count(TimeWindows.of(10000L), "window");
 

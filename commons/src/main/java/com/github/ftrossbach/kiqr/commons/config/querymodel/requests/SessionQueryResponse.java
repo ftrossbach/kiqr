@@ -17,6 +17,7 @@ package com.github.ftrossbach.kiqr.commons.config.querymodel.requests;
 
 
 
+import java.util.List;
 import java.util.SortedMap;
 
 /**
@@ -26,22 +27,22 @@ public class SessionQueryResponse {
 
 
 
-    private SortedMap<Window, String> values;
+    private List<Window> values;
 
     public SessionQueryResponse() {
 
     }
 
-    public SessionQueryResponse(SortedMap<Window, String> values) {
+    public SessionQueryResponse(List<Window>values) {
 
         this.values = values;
     }
 
-    public void setValues(SortedMap<Window, String> values) {
-        this.values = values;
-    }
-
-    public SortedMap<Window, String> getValues() {
+    public List<Window> getValues() {
         return values;
+    }
+
+    public void setValues(List<Window> values) {
+        this.values = values;
     }
 }

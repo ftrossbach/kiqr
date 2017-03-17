@@ -7,11 +7,13 @@ public class Window implements Comparable<Window>{
 
     private long startMs;
     private long endMs;
+    private String value;
 
 
-    public Window(long startMs, long endMs) {
+    public Window(long startMs, long endMs, String value) {
         this.startMs = startMs;
         this.endMs = endMs;
+        this.value = value;
     }
 
     public Window() {
@@ -33,6 +35,13 @@ public class Window implements Comparable<Window>{
         this.endMs = endMs;
     }
 
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
 
     @Override
     public int compareTo(Window o) {
@@ -55,5 +64,13 @@ public class Window implements Comparable<Window>{
         int result = (int) (startMs ^ (startMs >>> 32));
         result = 31 * result + (int) (endMs ^ (endMs >>> 32));
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Window{" +
+                "startMs=" + startMs +
+                ", endMs=" + endMs +
+                '}';
     }
 }

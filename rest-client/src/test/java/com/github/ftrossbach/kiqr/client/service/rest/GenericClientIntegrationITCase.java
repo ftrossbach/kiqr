@@ -2,6 +2,7 @@ package com.github.ftrossbach.kiqr.client.service.rest;
 
 import com.github.ftrossbach.kiqr.client.service.GenericBlockingKiqrClient;
 import com.github.ftrossbach.kiqr.client.service.QueryExecutionException;
+import com.github.ftrossbach.kiqr.commons.config.querymodel.requests.*;
 import com.github.ftrossbach.kiqr.core.RuntimeVerticle;
 import com.github.ftrossbach.kiqr.rest.server.RestKiqrServerVerticle;
 import io.vertx.core.AbstractVerticle;
@@ -13,9 +14,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.kstream.KStreamBuilder;
-import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.TimeWindows;
+import org.apache.kafka.streams.kstream.*;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -115,9 +114,13 @@ public class GenericClientIntegrationITCase {
 
 
         KStreamBuilder builder = new KStreamBuilder();
-        KTable<String, Long> kv = builder.table(Serdes.String(), Serdes.Long(), TOPIC, "kv");
+        KStream<String, Long> kv = builder.stream(Serdes.String(), Serdes.Long(), TOPIC);
 
-        kv.toStream().groupByKey().count(TimeWindows.of(10000L), "window");
+
+        KGroupedStream<String, Long> group = kv.groupBy((k, v) -> k, Serdes.String(), Serdes.Long());
+        group.reduce((a,b) -> b, "kv");
+        group.count(SessionWindows.with(60 * 1000), "session");
+        group.count(TimeWindows.of(10000L), "window");
 
         Properties streamProps = new Properties();
         streamProps.put(StreamsConfig.APPLICATION_ID_CONFIG, UUID.randomUUID().toString());
@@ -311,6 +314,31 @@ public class GenericClientIntegrationITCase {
         Map<Long, Long> resultKey4 = client.getWindow("window", String.class, "key4", Long.class, Serdes.String(), Serdes.Long(), 0L, 100001L);
         assertThat(resultKey4.entrySet(),hasSize(1));
         assertThat(resultKey4, hasEntry(0L, 3L));
+
+
+    }
+
+    @Test
+    public void successfulCount() throws Exception{
+
+        GenericBlockingKiqrClient client = new GenericBlockingRestKiqrClientImpl("localhost", 44321);
+
+        Optional<Long> count = client.count("kv");
+
+        assertTrue(count.isPresent());;
+        assertThat(count.get(), is(greaterThan(0L)));
+
+
+    }
+
+    @Test
+    public void successfulSession() throws Exception{
+
+        GenericBlockingKiqrClient client = new GenericBlockingRestKiqrClientImpl("localhost", 44321);
+
+        Map<com.github.ftrossbach.kiqr.commons.config.querymodel.requests.Window, Long> session = client.getSession("session", String.class, "key1", Long.class, Serdes.String(), Serdes.Long());
+
+        assertThat(session.size(), is(equalTo(2)) );
 
 
     }
