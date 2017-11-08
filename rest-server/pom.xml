@@ -29,6 +29,10 @@
 
     <artifactId>kiqr-rest-server</artifactId>
 
+    <name>kiqr-rest-server</name>
+    <description>REST-Server for KIQR</description>
+    <url>https://github.com/ftrossbach/kiqr</url>
+
 
     <dependencies>
         <dependency>

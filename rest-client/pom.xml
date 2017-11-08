@@ -28,6 +28,9 @@
     </parent>
 
     <artifactId>kiqr-rest-client</artifactId>
+    <name>kiqr-rest-client</name>
+    <description>REST client for KIQR</description>
+    <url>https://github.com/ftrossbach/kiqr</url>
 
     <dependencies>
         <dependency>

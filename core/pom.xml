@@ -29,6 +29,10 @@
 
     <artifactId>kiqr-core</artifactId>
 
+    <name>kiqr-core</name>
+    <description>Core KIQR module</description>
+    <url>https://github.com/ftrossbach/kiqr</url>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
