@@ -21,7 +21,7 @@
 
     <groupId>com.github.ftrossbach</groupId>
     <artifactId>kiqr</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2-SNAPSHOT</version>
     <inceptionYear>2017</inceptionYear>
     <packaging>pom</packaging>
 
@@ -190,7 +190,7 @@
         <url>https://github.com/ftrossbach/kiqr</url>
         <connection>scm:git:git://github.com/ftrossbach/kiqr.git</connection>
         <developerConnection>scm:git:git@github.com:ftrossbach/kiqr.git</developerConnection>
-      <tag>kiqr-0.0.1</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <build>
